@@ -2,9 +2,9 @@
 #include "Initializers.hpp"
 #include "Debugger.hpp"
 #include "../utilities/Timer.hpp"
+#include "AssetsManager.hpp"
 
 #include <cassert>
-#include <glm/gtx/transform.hpp>
 
 namespace iris::graphics{
 
@@ -124,11 +124,9 @@ namespace iris::graphics{
                 pipelineConfig);
 
 
-        // loading model and placing it to renderobject
-        std::shared_ptr<Model> model =
-                Model::createModelFromFile(m_rDevice, "../assets/models/lowPolyBoat/lowPolyBoat.obj");
+        AssetsManager::loadModel(m_rDevice, "Boat", "../assets/models/lowPolyBoat/lowPolyBoat.obj");
 
-        m_BoatObject.m_Model = model;
+        m_BoatObject.m_Model = AssetsManager::getModel("Boat");
         m_BoatObject.m_Transform.translation = {0.0f, 0.0f, 0.0f};
         m_BoatObject.m_Transform.scale = {0.1f, 0.1f, 0.1f};
     }

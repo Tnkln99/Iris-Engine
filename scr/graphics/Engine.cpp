@@ -1,5 +1,5 @@
 #include "Engine.hpp"
-#include "Debugger.hpp"
+#include "AssetsManager.hpp"
 
 namespace iris::graphics {
 
@@ -20,5 +20,6 @@ namespace iris::graphics {
         }
 
         m_Renderer.postRender();
+        AssetsManager::clear();
     }
 }
