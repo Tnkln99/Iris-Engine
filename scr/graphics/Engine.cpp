@@ -20,6 +20,6 @@ namespace iris::graphics {
         }
 
         m_Renderer.postRender();
-        AssetsManager::clear();
+        AssetsManager::clear(m_Device);
     }
 }

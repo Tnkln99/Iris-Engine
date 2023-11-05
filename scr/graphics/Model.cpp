@@ -75,6 +75,8 @@ namespace iris::graphics{
                 indices.push_back(uniqueVertices[vertex]);
             }
         }
+
+        std::cout << "Model loaded successfully " << filePath << std::endl;
     }
 
     Model::Model(Device& device, const Builder& builder) : m_rDevice{device }

@@ -2,6 +2,7 @@
 #define IRIS_OBJECTS_HPP
 
 #include "Model.hpp"
+#include "Material.hpp"
 
 #include <memory>
 
@@ -28,6 +29,7 @@ namespace iris::graphics{
     class RenderObject {
     public:
         std::shared_ptr<Model> m_Model{};
+        std::shared_ptr<Material> m_Material{};
         Transform m_Transform{};
         GpuObjectData m_GpuObjectData{};
 

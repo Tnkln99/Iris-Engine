@@ -18,18 +18,23 @@ namespace iris::graphics{
         Device& m_rDevice;
         Renderer& m_rRenderer;
 
-        std::unique_ptr<Pipeline> m_DefaultPipeline;
-        VkPipelineLayout m_DefaultPipelineLayout{};
-
         std::unique_ptr<DescriptorPool> m_GlobalPool{};
-        std::vector<VkDescriptorSet> m_GlobalDescriptorSets;
 
+        std::unique_ptr<DescriptorSetLayout> m_GlobalSetLayout{};
+        std::unique_ptr<DescriptorSetLayout> m_SingleTexturedSetLayout{};
+
+        std::vector<VkDescriptorSet> m_CameraDescriptorSets{};
         std::vector<AllocatedBuffer> m_UboCameraBuffers;
 
-        RenderObject m_BoatObject{};
         Camera m_Camera{};
+        std::vector<RenderObject> m_RenderObjects{};
 
         void loadScene();
+        void loadModels();
+        void loadImages();
+        void initDescriptorSets();
+        void initMaterials();
+        void initObjects();
     };
 }
 

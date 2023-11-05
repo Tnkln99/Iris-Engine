@@ -10,6 +10,7 @@
 #include <string>
 #include <vk_mem_alloc.h>
 #include <functional>
+#include <memory>
 
 namespace iris::graphics{
     struct AllocatedBuffer {
@@ -20,6 +21,11 @@ namespace iris::graphics{
     struct AllocatedImage {
         VkImage image;
         VmaAllocation allocation;
+    };
+
+    struct Texture{
+        AllocatedImage image;
+        VkImageView imageView;
     };
 
     struct UploadContext {
@@ -86,6 +92,7 @@ namespace iris::graphics{
         void copyToBuffer(void * src, AllocatedBuffer& dst, size_t size);
 
         void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
+        AllocatedImage loadTexture(const std::string& filePath);
     private:
         Window& m_rWindow;
 

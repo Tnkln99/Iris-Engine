@@ -19,3 +19,9 @@
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb.git
+[submodule "lib/loguru"]
+	path = lib/loguru
+	url = https://github.com/emilk/loguru.git
+[submodule "lib/gperftools"]
+	path = lib/gperftools
+	url = https://github.com/gperftools/gperftools.git

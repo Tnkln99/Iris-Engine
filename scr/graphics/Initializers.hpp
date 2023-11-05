@@ -26,11 +26,14 @@ namespace iris::graphics{
                                                                          const std::vector<VkSubpassDescription>& subpasses,
                                                                          const std::vector<VkSubpassDependency>& dependencies);
         [[nodiscard]] static VkImageViewCreateInfo createImageViewInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags) ;
+        [[nodiscard]] static VkImageCreateInfo  createImageInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent);
+        [[nodiscard]] static VkSamplerCreateInfo createSamplerInfo(VkFilter filters, VkSamplerAddressMode samplerAddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT);
         [[nodiscard]] static VkFramebufferCreateInfo createFramebufferInfo(VkRenderPass renderPass, VkExtent2D extent, const std::vector<VkImageView>& attachments);
         [[nodiscard]] static VkRenderPassBeginInfo renderPassBeginInfo(VkRenderPass renderPass,
                                                                        VkExtent2D windowExtent,
                                                                        VkFramebuffer framebuffer) ;
         [[nodiscard]] static VkPipelineLayoutCreateInfo createPipelineLayoutInfo();
+        [[nodiscard]] static VkWriteDescriptorSet writeDescriptorImage(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorImageInfo* imageInfo, uint32_t binding);
     };
 }
 
