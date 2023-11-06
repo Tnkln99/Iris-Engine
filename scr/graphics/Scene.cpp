@@ -94,7 +94,9 @@ namespace iris::graphics{
     }
 
     void Scene::loadImages() {
+        AssetsManager::loadTexture(m_rDevice, "StarAmbient", "../assets/models/Star/Ambient.png");
         AssetsManager::loadTexture(m_rDevice, "StarDiffuse", "../assets/models/Star/Diffuse.png");
+        AssetsManager::loadTexture(m_rDevice, "StarSpecular", "../assets/models/Star/Specular.png");
     }
 
     void Scene::initDescriptorSets() {
@@ -103,8 +105,8 @@ namespace iris::graphics{
         m_uboCameraBuffers.resize(m_rRenderer.getMaximumFramesInFlight());
 
         m_pGlobalPool = DescriptorPool::Builder(m_rDevice)
-                .setMaxSets(10)
-                .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10)
+                .setMaxSets(100)
+                .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100)
                 .build();
 
         for(auto & uboBuffer : m_uboCameraBuffers)
@@ -129,8 +131,10 @@ namespace iris::graphics{
                     .build(m_cameraDescriptorSets[i]);
         }
 
-        m_pSingleTexturedSetLayout = DescriptorSetLayout::Builder(m_rDevice)
+        m_pTexturedSetLayout = DescriptorSetLayout::Builder(m_rDevice)
                 .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+                .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+                .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                 .build();
     }
 
@@ -173,7 +177,7 @@ namespace iris::graphics{
 
         // textured pipeline
         VkPipelineLayoutCreateInfo texturedPipelineLayoutCreateInfo = Initializers::createPipelineLayoutInfo();
-        const std::vector texturedDescriptorSetLayouts{m_pGlobalSetLayout->getDescriptorSetLayout(), m_pSingleTexturedSetLayout->getDescriptorSetLayout()};
+        const std::vector texturedDescriptorSetLayouts{m_pGlobalSetLayout->getDescriptorSetLayout(), m_pTexturedSetLayout->getDescriptorSetLayout()};
 
         texturedPipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(texturedDescriptorSetLayouts.size());
         texturedPipelineLayoutCreateInfo.pSetLayouts = texturedDescriptorSetLayouts.data();
@@ -203,7 +207,10 @@ namespace iris::graphics{
 
         AssetsManager::loadMaterial(m_rDevice, "DefaultMeshTextured", texturedPipeline, texturedPipelineLayout);
         auto mat = AssetsManager::getMaterial("DefaultMeshTextured");
-        mat->setTexture(AssetsManager::getTexture("StarDiffuse"), *m_pGlobalPool, *m_pSingleTexturedSetLayout);
+        mat->setTexture(AssetsManager::getTexture("StarAmbient"),
+                        AssetsManager::getTexture("StarDiffuse"),
+                        AssetsManager::getTexture("StarSpecular"),
+                        *m_pGlobalPool, *m_pTexturedSetLayout);
     }
 
     void Scene::initObjects() {
@@ -221,11 +228,11 @@ namespace iris::graphics{
         star.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
         m_renderObjects.push_back(star);
 
-        RenderObject texturedStar{};
-        texturedStar.m_pModel = AssetsManager::getModel("Star");
-        texturedStar.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
-        texturedStar.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
-        texturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        m_renderObjects.push_back(texturedStar);
+        RenderObject textured{};
+        textured.m_pModel = AssetsManager::getModel("Star");
+        textured.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
+        textured.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
+        textured.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        m_renderObjects.push_back(textured);
     }
 }

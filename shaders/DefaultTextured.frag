@@ -12,13 +12,14 @@ layout(set = 0, binding = 0) uniform CameraBuffer{
     mat4 viewProj;
 } cameraData;
 
-layout(set = 1, binding = 0) uniform sampler2D diffuse;
+layout(set = 1, binding = 0) uniform sampler2D ambient;
+layout(set = 1, binding = 1) uniform sampler2D diffuse;
+layout(set = 1, binding = 2) uniform sampler2D specular;
 
 layout(push_constant) uniform Push{
     mat4 modelMatrix;
     mat4 normalMatrix;
 } push;
-
 
 //output write
 layout (location = 0) out vec4 outColor;
@@ -29,6 +30,7 @@ void main()
     vec3 lightPosition = vec3(1,1,1);
     vec4 lightColor = vec4(1,1,1,1);
 
+    vec3 cameraPos = vec3(inverse(cameraData.view)[3]);
     vec3 directionToLight = lightPosition - fragPosWorld;
     float attenuation = 1.0f / dot(directionToLight, directionToLight); // distance squared
 
@@ -36,7 +38,16 @@ void main()
     vec3 ambientLight = ambientLightColor.xyz * ambientLightColor.w;
     vec3 diffuseLight = finalLightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)),0);
 
-    vec3 diffuseColor = texture(diffuse,texCoord).xyz;
-    vec4 finalColor = vec4((diffuseLight * diffuseColor + ambientLight) * fragColor, 1.0);
+    // specular
+    vec3 viewDir = normalize(cameraPos - fragPosWorld);
+    vec3 reflectDir = reflect(-directionToLight, fragNormalWorld);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0);
+
+
+    vec3 ambientColor = texture(ambient,texCoord).xyz * ambientLight;
+    vec3 diffuseColor = texture(diffuse,texCoord).xyz * diffuseLight;
+    vec3 specularColor = texture(specular,texCoord).xyz * spec;
+
+    vec4 finalColor = vec4((diffuseColor + specularColor + ambientColor) * fragColor, 1.0);
     outColor = finalColor;
 }

@@ -21,7 +21,7 @@ namespace iris::graphics{
         std::unique_ptr<DescriptorPool> m_pGlobalPool{};
 
         std::unique_ptr<DescriptorSetLayout> m_pGlobalSetLayout{};
-        std::unique_ptr<DescriptorSetLayout> m_pSingleTexturedSetLayout{};
+        std::unique_ptr<DescriptorSetLayout> m_pTexturedSetLayout{};
 
         std::vector<VkDescriptorSet> m_cameraDescriptorSets{};
         std::vector<AllocatedBuffer> m_uboCameraBuffers;

@@ -16,7 +16,10 @@ namespace iris::graphics{
                  VkPipelineLayout layout, VkDescriptorSet texture = VK_NULL_HANDLE);
         ~Material();
 
-        void setTexture(std::shared_ptr<Texture> texture, const DescriptorPool& pool, const DescriptorSetLayout& layout);
+        void setTexture(const std::shared_ptr<Texture>& ambientTexture,
+                        const std::shared_ptr<Texture>& diffuseTexture,
+                        const std::shared_ptr<Texture>& specularTexture,
+                        const DescriptorPool& pool, const DescriptorSetLayout& layout);
 
         [[nodiscard]] const std::string& getName() const { return m_name; }
         [[nodiscard]] const VkDescriptorSet& getTextureSet() const { return m_textureSet; }
@@ -28,7 +31,11 @@ namespace iris::graphics{
         std::string m_name{};
 
         VkSampler m_sampler{};
-        std::shared_ptr<Texture> m_pTexture;
+
+        std::shared_ptr<Texture> m_pAmbientTexture;
+        std::shared_ptr<Texture> m_pDiffuseTexture;
+        std::shared_ptr<Texture> m_pSpecularTexture;
+
         VkDescriptorSet m_textureSet{VK_NULL_HANDLE}; //texture defaulted to null
 
         std::shared_ptr<Pipeline> m_pipeline;
