@@ -10,7 +10,7 @@ namespace iris::graphics{
     void AssetsManager::clear(Device& device) {
         m_Models.clear();
         for(auto & material : m_Materials){
-            vkDestroyPipelineLayout(device.getDevice(), material.second->m_PipeLineLayout, nullptr);
+            vkDestroyPipelineLayout(device.getDevice(), material.second->getPipeLineLayout(), nullptr);
         }
 
         m_Materials.clear();
@@ -40,13 +40,13 @@ namespace iris::graphics{
         return m_Models[name];
     }
 
-    void AssetsManager::loadMaterial(const std::string &name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout,
+    void AssetsManager::loadMaterial(Device& device, const std::string &name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout,
                                      VkDescriptorSet texture) {
         if(m_Materials.find(name) != m_Materials.end()){
             std::cout << "Material " << name << " already loaded!" << std::endl;
             return;
         }
-         m_Materials[name] = std::make_shared<Material>(name, pipeline, layout, texture);
+         m_Materials[name] = std::make_shared<Material>(device, name, pipeline, layout, texture);
     }
 
     std::shared_ptr<Material> AssetsManager::getMaterial(const std::string &name) {
@@ -67,6 +67,7 @@ namespace iris::graphics{
         std::shared_ptr<Texture> textureToLoad = std::make_shared<Texture>();
         AllocatedImage image = device.loadTexture(path);
 
+        textureToLoad->name = name;
         textureToLoad->image = image;
 
         VkImageViewCreateInfo imageInfo = Initializers::createImageViewInfo(VK_FORMAT_R8G8B8A8_SRGB, textureToLoad->image.image, VK_IMAGE_ASPECT_COLOR_BIT);

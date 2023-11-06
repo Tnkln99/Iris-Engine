@@ -24,6 +24,8 @@ namespace iris::graphics{
     };
 
     struct Texture{
+        std::string name;
+
         AllocatedImage image;
         VkImageView imageView;
     };

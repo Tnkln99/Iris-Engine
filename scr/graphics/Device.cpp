@@ -479,6 +479,7 @@ namespace iris::graphics{
         vmaDestroyBuffer(m_Allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 
         std::cout << "Texture loaded successfully " << filePath << std::endl;
+
         return outImage;
     }
 

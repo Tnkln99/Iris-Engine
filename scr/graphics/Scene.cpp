@@ -34,37 +34,45 @@ namespace iris::graphics{
         std::shared_ptr<Model> lastModel = nullptr;
         std::shared_ptr<Material> lastMaterial = nullptr;
         for(auto & renderObject : m_RenderObjects){
+            renderObject.update();
             auto material = renderObject.m_Material;
-            material->m_Pipeline->bind(cmd);
+            if(lastMaterial != material){
+                material->getPipeline()->bind(cmd);
 
-            vkCmdBindDescriptorSets(
-                    cmd,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    material->m_PipeLineLayout,
-                    0,
-                    1,
-                    &m_CameraDescriptorSets[m_rRenderer.getCurrentFrame()],
-                    0,
-                    nullptr
-            );
+                vkCmdBindDescriptorSets(
+                        cmd,
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        material->getPipeLineLayout(),
+                        0,
+                        1,
+                        &m_CameraDescriptorSets[m_rRenderer.getCurrentFrame()],
+                        0,
+                        nullptr
+                );
+
+                if(material->getTextureSet() != VK_NULL_HANDLE){
+                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                            material->getPipeLineLayout(), 1, 1,
+                                            &material->getTextureSet(), 0, nullptr);
+                }
+
+                lastMaterial = material;
+            }
+
 
             vkCmdPushConstants(
                     cmd,
-                    material->m_PipeLineLayout,
+                    material->getPipeLineLayout(),
                     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                     0,
                     sizeof(GpuObjectData),
                     &renderObject.m_GpuObjectData);
 
-            if(material->m_TextureSet != VK_NULL_HANDLE){
-                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                        material->m_PipeLineLayout, 1, 1,
-                                        &material->m_TextureSet, 0, nullptr);
+
+            if(lastModel != renderObject.m_Model){
+                renderObject.m_Model->bind(cmd);
+                lastModel = renderObject.m_Model;
             }
-
-            renderObject.update();
-
-            renderObject.m_Model->bind(cmd);
             renderObject.m_Model->draw(cmd);
         }
 
@@ -161,7 +169,7 @@ namespace iris::graphics{
                 "../shaders/Default.frag.spv",
                 pipelineConfig);
 
-        AssetsManager::loadMaterial("DefaultMeshNonTextured", defaultPipeline, defaultPipelineLayout);
+        AssetsManager::loadMaterial(m_rDevice, "DefaultMeshNonTextured", defaultPipeline, defaultPipelineLayout);
 
         // textured pipeline
         VkPipelineLayoutCreateInfo texturedPipelineLayoutCreateInfo = Initializers::createPipelineLayoutInfo();
@@ -193,26 +201,9 @@ namespace iris::graphics{
                 "../shaders/DefaultTextured.frag.spv",
                 texturedPipelineConfigInfo);
 
-        AssetsManager::loadMaterial("DefaultMeshTextured", texturedPipeline, texturedPipelineLayout);
-
-
-        // init the descriptor set for the textured material
-        auto texturedMat=	AssetsManager::getMaterial("DefaultMeshTextured");
-        m_GlobalPool->allocateDescriptor(m_SingleTexturedSetLayout->getDescriptorSetLayout(),
-                                         texturedMat->m_TextureSet);
-
-        VkSamplerCreateInfo samplerInfo = Initializers::createSamplerInfo(VK_FILTER_LINEAR);
-        VkSampler sampler;
-        vkCreateSampler(m_rDevice.getDevice(), &samplerInfo, nullptr, &sampler);
-
-        VkDescriptorImageInfo imageBufferInfo;
-        imageBufferInfo.sampler = sampler;
-        imageBufferInfo.imageView = AssetsManager::getTexture("StarDiffuse")->imageView;
-        imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        VkWriteDescriptorSet texture1 = Initializers::writeDescriptorImage(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, texturedMat->m_TextureSet, &imageBufferInfo, 0);
-
-        vkUpdateDescriptorSets(m_rDevice.getDevice(), 1, &texture1, 0, nullptr);
+        AssetsManager::loadMaterial(m_rDevice, "DefaultMeshTextured", texturedPipeline, texturedPipelineLayout);
+        auto mat = AssetsManager::getMaterial("DefaultMeshTextured");
+        mat->setTexture(AssetsManager::getTexture("StarDiffuse"), *m_GlobalPool, *m_SingleTexturedSetLayout);
     }
 
     void Scene::initObjects() {

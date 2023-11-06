@@ -17,7 +17,7 @@ namespace iris::graphics{
         static void loadModel(Device& device, const std::string& name, const std::string& path);
         static std::shared_ptr<Model> getModel(const std::string& name);
 
-        static void loadMaterial(const std::string& name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout, VkDescriptorSet texture = VK_NULL_HANDLE);
+        static void loadMaterial(Device& device, const std::string& name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout, VkDescriptorSet texture = VK_NULL_HANDLE);
         static std::shared_ptr<Material> getMaterial(const std::string& name);
 
         static void loadTexture(Device& device, const std::string& name, const std::string& path);
