@@ -17,20 +17,20 @@ namespace iris::graphics{
 
         void setTexture(std::shared_ptr<Texture> texture, const DescriptorPool& pool, const DescriptorSetLayout& layout);
 
-        [[nodiscard]] const std::string& getName() const { return m_Name; }
-        [[nodiscard]] const VkDescriptorSet& getTextureSet() const { return m_TextureSet; }
-        [[nodiscard]] const std::shared_ptr<Pipeline>& getPipeline() const { return m_Pipeline; }
-        [[nodiscard]] const VkPipelineLayout& getPipeLineLayout() const { return m_PipeLineLayout; }
+        [[nodiscard]] const std::string& getName() const { return m_name; }
+        [[nodiscard]] const VkDescriptorSet& getTextureSet() const { return m_textureSet; }
+        [[nodiscard]] const std::shared_ptr<Pipeline>& getPipeline() const { return m_pipeline; }
+        [[nodiscard]] const VkPipelineLayout& getPipeLineLayout() const { return m_pipeLineLayout; }
     private:
         Device& m_rDevice;
 
-        std::string m_Name{};
+        std::string m_name{};
 
-        std::shared_ptr<Texture> m_Texture;
-        VkDescriptorSet m_TextureSet{VK_NULL_HANDLE}; //texture defaulted to null
+        std::shared_ptr<Texture> m_pTexture;
+        VkDescriptorSet m_textureSet{VK_NULL_HANDLE}; //texture defaulted to null
 
-        std::shared_ptr<Pipeline> m_Pipeline;
-        VkPipelineLayout m_PipeLineLayout{};
+        std::shared_ptr<Pipeline> m_pipeline;
+        VkPipelineLayout m_pipeLineLayout{};
     };
 }
 

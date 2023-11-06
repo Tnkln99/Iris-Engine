@@ -26,7 +26,7 @@ namespace iris::graphics{
 
         private:
             Device& m_rDevice;
-            std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_Bindings{};
+            std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_bindings{};
         };
 
         DescriptorSetLayout(Device& device, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings);
@@ -34,12 +34,12 @@ namespace iris::graphics{
         DescriptorSetLayout(const DescriptorSetLayout&) = delete;
         DescriptorSetLayout& operator=(const DescriptorSetLayout&) = delete;
 
-        VkDescriptorSetLayout getDescriptorSetLayout() const { return m_DescriptorSetLayout; }
+        VkDescriptorSetLayout getDescriptorSetLayout() const { return m_descriptorSetLayout; }
 
     private:
         Device& m_rDevice;
-        VkDescriptorSetLayout m_DescriptorSetLayout;
-        std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_Bindings;
+        VkDescriptorSetLayout m_descriptorSetLayout;
+        std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_bindings;
 
         friend class DescriptorWriter;
     };
@@ -57,9 +57,9 @@ namespace iris::graphics{
 
         private:
             Device& m_rDevice;
-            std::vector<VkDescriptorPoolSize> m_PoolSizes{};
-            uint32_t m_MaxSets = 1000;
-            VkDescriptorPoolCreateFlags m_PoolFlags = 0;
+            std::vector<VkDescriptorPoolSize> m_poolSizes{};
+            uint32_t m_maxSets = 1000;
+            VkDescriptorPoolCreateFlags m_poolFlags = 0;
         };
 
         DescriptorPool(
@@ -80,7 +80,7 @@ namespace iris::graphics{
 
     private:
         Device& m_rDevice;
-        VkDescriptorPool m_DescriptorPool;
+        VkDescriptorPool m_descriptorPool;
 
         friend class DescriptorWriter;
     };
@@ -96,9 +96,9 @@ namespace iris::graphics{
         void overwrite(VkDescriptorSet& set);
 
     private:
-        DescriptorSetLayout& m_SetLayout;
-        DescriptorPool& m_Pool;
-        std::vector<VkWriteDescriptorSet> m_Writes;
+        DescriptorSetLayout& m_setLayout;
+        DescriptorPool& m_pool;
+        std::vector<VkWriteDescriptorSet> m_writes;
     };
 }
 

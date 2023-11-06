@@ -5,9 +5,9 @@
 #include <cassert>
 
 namespace iris::graphics{
-    PFN_vkCreateDebugUtilsMessengerEXT Debugger::vkCreateDebugUtilsMessengerEXT;
-    PFN_vkDestroyDebugUtilsMessengerEXT Debugger::vkDestroyDebugUtilsMessengerEXT;
-    VkDebugUtilsMessengerEXT Debugger::debugUtilsMessenger;
+    PFN_vkCreateDebugUtilsMessengerEXT Debugger::m_sVkCreateDebugUtilsMessengerEXT;
+    PFN_vkDestroyDebugUtilsMessengerEXT Debugger::m_sVkDestroyDebugUtilsMessengerEXT;
+    VkDebugUtilsMessengerEXT Debugger::m_sDebugUtilsMessenger;
 
     VKAPI_ATTR VkBool32 VKAPI_CALL Debugger::debugUtilsMessengerCallback(
             VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -63,8 +63,8 @@ namespace iris::graphics{
     void Debugger::setupDebugging(VkInstance instance)
     {
 
-        Debugger::vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
-        Debugger::vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+        Debugger::m_sVkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+        Debugger::m_sVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 
         VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI{};
         debugUtilsMessengerCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -72,14 +72,14 @@ namespace iris::graphics{
         debugUtilsMessengerCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
         debugUtilsMessengerCI.pfnUserCallback = debugUtilsMessengerCallback;
 
-        vkCheck(vkCreateDebugUtilsMessengerEXT(instance, &debugUtilsMessengerCI, nullptr, &debugUtilsMessenger), "Failed to set up debug messenger!");
+        vkCheck(m_sVkCreateDebugUtilsMessengerEXT(instance, &debugUtilsMessengerCI, nullptr, &m_sDebugUtilsMessenger), "Failed to set up debug messenger!");
     }
 
     void Debugger::freeDebugCallback(VkInstance instance)
     {
-        if (Debugger::debugUtilsMessenger != VK_NULL_HANDLE)
+        if (Debugger::m_sDebugUtilsMessenger != VK_NULL_HANDLE)
         {
-            vkDestroyDebugUtilsMessengerEXT(instance, Debugger::debugUtilsMessenger, nullptr);
+            m_sVkDestroyDebugUtilsMessengerEXT(instance, Debugger::m_sDebugUtilsMessenger, nullptr);
         }
     }
 

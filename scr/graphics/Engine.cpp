@@ -13,13 +13,13 @@ namespace iris::graphics {
     }
 
     void Engine::run() {
-        while(!m_Window.shouldCloseWindow()){
-            m_Window.pollWindowEvents();
+        while(!m_window.shouldCloseWindow()){
+            m_window.pollWindowEvents();
 
-            m_Viewport.draw();
+            m_viewport.draw();
         }
 
-        m_Renderer.postRender();
-        AssetsManager::clear(m_Device);
+        m_renderer.postRender();
+        AssetsManager::clear(m_device);
     }
 }

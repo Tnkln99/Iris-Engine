@@ -18,16 +18,16 @@ namespace iris::graphics{
         Device& m_rDevice;
         Renderer& m_rRenderer;
 
-        std::unique_ptr<DescriptorPool> m_GlobalPool{};
+        std::unique_ptr<DescriptorPool> m_pGlobalPool{};
 
-        std::unique_ptr<DescriptorSetLayout> m_GlobalSetLayout{};
-        std::unique_ptr<DescriptorSetLayout> m_SingleTexturedSetLayout{};
+        std::unique_ptr<DescriptorSetLayout> m_pGlobalSetLayout{};
+        std::unique_ptr<DescriptorSetLayout> m_pSingleTexturedSetLayout{};
 
-        std::vector<VkDescriptorSet> m_CameraDescriptorSets{};
-        std::vector<AllocatedBuffer> m_UboCameraBuffers;
+        std::vector<VkDescriptorSet> m_cameraDescriptorSets{};
+        std::vector<AllocatedBuffer> m_uboCameraBuffers;
 
-        Camera m_Camera{};
-        std::vector<RenderObject> m_RenderObjects{};
+        Camera m_camera{};
+        std::vector<RenderObject> m_renderObjects{};
 
         void loadScene();
         void loadModels();

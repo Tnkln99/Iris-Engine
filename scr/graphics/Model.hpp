@@ -19,23 +19,23 @@ namespace iris::graphics{
     {
     public:
         struct Vertex {
-            glm::vec3 position{};
-            glm::vec3 color{};
-            glm::vec3 normal{};
-            glm::vec2 uv{};
+            glm::vec3 m_position{};
+            glm::vec3 m_color{};
+            glm::vec3 m_normal{};
+            glm::vec2 m_uv{};
 
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 
             bool operator==(const Vertex& other) const
             {
-                return position == other.position && color == other.color && normal == other.normal &&
-                       uv == other.uv;
+                return m_position == other.m_position && m_color == other.m_color && m_normal == other.m_normal &&
+                       m_uv == other.m_uv;
             }
         };
         struct Builder {
-            std::vector<Vertex> vertices{};
-            std::vector<uint32_t> indices{};
+            std::vector<Vertex> m_vertices{};
+            std::vector<uint32_t> m_indices{};
 
             void loadModel(const std::string& filePath);
         };
@@ -56,12 +56,12 @@ namespace iris::graphics{
 
         Device& m_rDevice;
 
-        AllocatedBuffer m_VertexBuffer{};
-        uint32_t m_VertexCount{};
+        AllocatedBuffer m_vertexBuffer{};
+        uint32_t m_vertexCount{};
 
-        bool m_bHasIndexBuffer = false;
-        AllocatedBuffer m_IndexBuffer{};
-        uint32_t m_IndexCount{};
+        bool m_hasIndexBuffer = false;
+        AllocatedBuffer m_indexBuffer{};
+        uint32_t m_indexCount{};
     };
 }
 

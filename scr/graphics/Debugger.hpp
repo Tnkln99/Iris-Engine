@@ -7,9 +7,9 @@ namespace iris::graphics {
 
     class Debugger{
     public:
-        static PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
-        static PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT;
-        static VkDebugUtilsMessengerEXT debugUtilsMessenger;
+        static PFN_vkCreateDebugUtilsMessengerEXT m_sVkCreateDebugUtilsMessengerEXT;
+        static PFN_vkDestroyDebugUtilsMessengerEXT m_sVkDestroyDebugUtilsMessengerEXT;
+        static VkDebugUtilsMessengerEXT m_sDebugUtilsMessenger;
 
         // Load debug function pointers and set debug callback
         static void setupDebugging(VkInstance instance);

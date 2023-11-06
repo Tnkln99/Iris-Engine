@@ -14,20 +14,20 @@ namespace iris::graphics{
 
         createCommandBuffers();
         createRenderPass();
-        m_pSwapchain->createFramebuffers(m_RenderPass);
+        m_pSwapchain->createFramebuffers(m_renderPass);
     }
 
 
     Renderer::~Renderer() {
         vkDeviceWaitIdle(m_rDevice.getDevice());
         freeCommandBuffers();
-        vkDestroyRenderPass(m_rDevice.getDevice(), m_RenderPass, nullptr);
+        vkDestroyRenderPass(m_rDevice.getDevice(), m_renderPass, nullptr);
     }
 
     void Renderer::createCommandBuffers() {
-        m_CommandBuffers.resize(m_pSwapchain->m_cMaxImagesOnFlight);
-        VkCommandBufferAllocateInfo allocInfo = Initializers::createCommandBufferAllocateInfo(m_rDevice.getCommandPool(), static_cast<uint32_t>(m_CommandBuffers.size()));
-        Debugger::vkCheck(vkAllocateCommandBuffers(m_rDevice.getDevice(), &allocInfo, m_CommandBuffers.data()),
+        m_commandBuffers.resize(m_pSwapchain->m_cMaxImagesOnFlight);
+        VkCommandBufferAllocateInfo allocInfo = Initializers::createCommandBufferAllocateInfo(m_rDevice.getCommandPool(), static_cast<uint32_t>(m_commandBuffers.size()));
+        Debugger::vkCheck(vkAllocateCommandBuffers(m_rDevice.getDevice(), &allocInfo, m_commandBuffers.data()),
                           "Failed to allocate command buffers!");
     }
 
@@ -109,13 +109,13 @@ namespace iris::graphics{
 
         VkRenderPassCreateInfo renderPassInfo = Initializers::createRenderPassInfo(attachments, subpasses, dependencies);
 
-        Debugger::vkCheck(vkCreateRenderPass(m_rDevice.getDevice() , &renderPassInfo, nullptr, &m_RenderPass)
+        Debugger::vkCheck(vkCreateRenderPass(m_rDevice.getDevice() , &renderPassInfo, nullptr, &m_renderPass)
                 , "Failed to create render pass!");
     }
 
     VkCommandBuffer Renderer::beginFrame() {
         uint32_t imageIndex = m_pSwapchain->acquireNextImage(getCurrentFrame());
-        auto cmd = m_CommandBuffers[getCurrentFrame()];
+        auto cmd = m_commandBuffers[getCurrentFrame()];
         //now that we are sure that the commands finished executing, we can safely reset the command buffer to begin recording again.
         Debugger::vkCheck(vkResetCommandBuffer(cmd, 0),
                           "Failed to reset command buffer!");
@@ -125,7 +125,7 @@ namespace iris::graphics{
                           "Failed to begin recording command buffer!");
 
         // renderpass begin
-        VkRenderPassBeginInfo renderPassInfo = Initializers::renderPassBeginInfo(m_RenderPass,
+        VkRenderPassBeginInfo renderPassInfo = Initializers::renderPassBeginInfo(m_renderPass,
                                                                                  m_pSwapchain->getExtent(),
                                                                                  m_pSwapchain->getFrameBuffer(imageIndex));
         VkClearValue clearValue;
@@ -162,16 +162,16 @@ namespace iris::graphics{
         Debugger::vkCheck(vkEndCommandBuffer(cmd), "Failed to record command buffer!");
 
         m_pSwapchain->submitCommandBuffers(&cmd, getCurrentFrame());
-        m_FrameCount++;
+        m_frameCount++;
     }
 
     void Renderer::freeCommandBuffers() {
         vkFreeCommandBuffers(
                 m_rDevice.getDevice(),
                 m_rDevice.getCommandPool(),
-                static_cast<uint32_t>(m_CommandBuffers.size()),
-                m_CommandBuffers.data());
-        m_CommandBuffers.clear();
+                static_cast<uint32_t>(m_commandBuffers.size()),
+                m_commandBuffers.data());
+        m_commandBuffers.clear();
     }
 
     void Renderer::postRender() {

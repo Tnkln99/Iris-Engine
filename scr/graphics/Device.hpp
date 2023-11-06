@@ -14,41 +14,41 @@
 
 namespace iris::graphics{
     struct AllocatedBuffer {
-        VkBuffer buffer;
-        VmaAllocation allocation;
+        VkBuffer m_buffer;
+        VmaAllocation m_allocation;
     };
 
     struct AllocatedImage {
-        VkImage image;
-        VmaAllocation allocation;
+        VkImage m_image;
+        VmaAllocation m_allocation;
     };
 
     struct Texture{
-        std::string name;
+        std::string m_name;
 
-        AllocatedImage image;
-        VkImageView imageView;
+        AllocatedImage m_image;
+        VkImageView m_imageView;
     };
 
     struct UploadContext {
-        VkFence uploadFence;
-        VkCommandPool commandPool;
-        VkCommandBuffer commandBuffer;
+        VkFence m_uploadFence;
+        VkCommandPool m_commandPool;
+        VkCommandBuffer m_commandBuffer;
     };
 
     struct QueueFamilyIndices{
-        std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentFamily;
+        std::optional<uint32_t> m_graphicsFamily;
+        std::optional<uint32_t> m_presentFamily;
 
         [[nodiscard]] bool isComplete() const {
-            return graphicsFamily.has_value() && presentFamily.has_value();
+            return m_graphicsFamily.has_value() && m_presentFamily.has_value();
         }
     };
 
     struct SwapChainSupportDetails {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
+        VkSurfaceCapabilitiesKHR m_capabilities;
+        std::vector<VkSurfaceFormatKHR> m_formats;
+        std::vector<VkPresentModeKHR> m_presentModes;
     };
 
     class Device {
@@ -56,7 +56,7 @@ namespace iris::graphics{
 #ifdef NDEBUG
         const bool m_EnableValidationLayers = false;
 #else
-        const bool m_EnableValidationLayers = true;
+        const bool m_cEnableValidationLayers = true;
 #endif
 
         explicit Device(Window& window);
@@ -68,20 +68,20 @@ namespace iris::graphics{
         Device(Device &&) = delete;
         Device &operator=(Device &&) = delete;
 
-        [[nodiscard]] VkCommandPool getCommandPool() const { return m_CommandPool; }
-        [[nodiscard]] VkDevice getDevice() const { return m_Device; }
-        [[nodiscard]] VkPhysicalDevice getPhysicalDevice() const { return m_ChosenGpu; }
-        [[nodiscard]] VkSurfaceKHR getSurface() const { return m_Surface; }
-        [[nodiscard]] VkQueue getGraphicsQueue() const { return m_GraphicsQueue; }
-        [[nodiscard]] VkQueue getPresentQueue() const { return m_PresentQueue; }
-        [[nodiscard]] VkInstance getInstance() const { return m_Instance; }
+        [[nodiscard]] VkCommandPool getCommandPool() const { return m_commandPool; }
+        [[nodiscard]] VkDevice getDevice() const { return m_device; }
+        [[nodiscard]] VkPhysicalDevice getPhysicalDevice() const { return m_chosenGpu; }
+        [[nodiscard]] VkSurfaceKHR getSurface() const { return m_surface; }
+        [[nodiscard]] VkQueue getGraphicsQueue() const { return m_graphicsQueue; }
+        [[nodiscard]] VkQueue getPresentQueue() const { return m_presentQueue; }
+        [[nodiscard]] VkInstance getInstance() const { return m_instance; }
 
         [[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
         [[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
-        [[nodiscard]] VkPhysicalDeviceProperties getPhysicalDeviceProperties() const { return m_ChosenGpuProperties; }
+        [[nodiscard]] VkPhysicalDeviceProperties getPhysicalDeviceProperties() const { return m_chosenGpuProperties; }
         [[nodiscard]] VkSampleCountFlagBits getMaxUsableSampleCount() const;
 
-        [[nodiscard]] QueueFamilyIndices getQueueFamilyIndices() const { return m_QueueFamilyIndices; }
+        [[nodiscard]] QueueFamilyIndices getQueueFamilyIndices() const { return m_queueFamilyIndices; }
         [[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const;
 
         void createImageWithInfo(const VkImageCreateInfo &imageInfo,
@@ -98,24 +98,24 @@ namespace iris::graphics{
     private:
         Window& m_rWindow;
 
-        VmaAllocator m_Allocator{};
+        VmaAllocator m_allocator{};
 
-        UploadContext m_UploadContext{};
+        UploadContext m_uploadContext{};
 
-        VkInstance m_Instance{};
-        VkSurfaceKHR m_Surface{};
+        VkInstance m_instance{};
+        VkSurfaceKHR m_surface{};
 
         // physical device
-        VkPhysicalDevice m_ChosenGpu{};
-        VkPhysicalDeviceProperties m_ChosenGpuProperties{};
+        VkPhysicalDevice m_chosenGpu{};
+        VkPhysicalDeviceProperties m_chosenGpuProperties{};
 
         // logical device
-        VkDevice m_Device{};
-        VkQueue m_GraphicsQueue{};
-        VkQueue m_PresentQueue{};
-        QueueFamilyIndices m_QueueFamilyIndices;
+        VkDevice m_device{};
+        VkQueue m_graphicsQueue{};
+        VkQueue m_presentQueue{};
+        QueueFamilyIndices m_queueFamilyIndices;
 
-        VkCommandPool m_CommandPool{};
+        VkCommandPool m_commandPool{};
 
         void createInstance();
         void createSurface();

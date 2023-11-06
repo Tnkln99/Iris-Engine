@@ -8,20 +8,20 @@ namespace iris::graphics{
         PipelineConfigInfo(const PipelineConfigInfo&) = delete;
         PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
 
-        std::vector<VkVertexInputBindingDescription> bindingDescriptions{};
-        std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
-        VkPipelineViewportStateCreateInfo viewportInfo;
-        VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
-        VkPipelineRasterizationStateCreateInfo rasterizationInfo;
-        VkPipelineMultisampleStateCreateInfo multisampleInfo;
-        VkPipelineColorBlendAttachmentState colorBlendAttachment;
-        VkPipelineColorBlendStateCreateInfo colorBlendInfo;
-        VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
-        std::vector<VkDynamicState> dynamicStateEnables;
-        VkPipelineDynamicStateCreateInfo dynamicStateInfo;
-        VkPipelineLayout pipelineLayout = nullptr;
-        VkRenderPass renderPass = nullptr;
-        uint32_t subpass = 0;
+        std::vector<VkVertexInputBindingDescription> m_bindingDescriptions{};
+        std::vector<VkVertexInputAttributeDescription> m_attributeDescriptions{};
+        VkPipelineViewportStateCreateInfo m_viewportInfo;
+        VkPipelineInputAssemblyStateCreateInfo m_inputAssemblyInfo;
+        VkPipelineRasterizationStateCreateInfo m_rasterizationInfo;
+        VkPipelineMultisampleStateCreateInfo m_multisampleInfo;
+        VkPipelineColorBlendAttachmentState m_colorBlendAttachment;
+        VkPipelineColorBlendStateCreateInfo m_colorBlendInfo;
+        VkPipelineDepthStencilStateCreateInfo m_depthStencilInfo;
+        std::vector<VkDynamicState> m_dynamicStateEnables;
+        VkPipelineDynamicStateCreateInfo m_dynamicStateInfo;
+        VkPipelineLayout m_pipelineLayout = nullptr;
+        VkRenderPass m_renderPass = nullptr;
+        uint32_t m_subpass = 0;
     };
     class Pipeline
     {
@@ -40,9 +40,9 @@ namespace iris::graphics{
         static void defaultPipelineConfig(PipelineConfigInfo& configInfo);
     private:
         Device& m_rDevice;
-        VkPipeline m_GraphicsPipeline;
-        VkShaderModule m_VertShaderModule;
-        VkShaderModule m_FragShaderModule;
+        VkPipeline m_graphicsPipeline;
+        VkShaderModule m_vertShaderModule;
+        VkShaderModule m_fragShaderModule;
 
         static std::vector<char> readFile(const std::string& filePath);
 

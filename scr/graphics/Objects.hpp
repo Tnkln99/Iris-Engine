@@ -9,29 +9,29 @@
 namespace iris::graphics{
 
     struct Transform{
-        glm::vec3 translation{};
-        glm::vec3 scale{1.f, 1.f, 1.f};
-        glm::vec3 rotation{};
+        glm::vec3 m_translation{};
+        glm::vec3 m_scale{1.f, 1.f, 1.f};
+        glm::vec3 m_rotation{};
     };
 
     struct GpuObjectData{
-        glm::mat4 modelMatrix{ 1.f };
-        glm::mat4 normalMatrix{ 1.f };
+        glm::mat4 m_modelMatrix{1.f };
+        glm::mat4 m_normalMatrix{1.f };
     };
 
     struct GpuCameraData{
-        glm::mat4 view;
-        glm::mat4 proj;
-        glm::mat4 viewProj;
+        glm::mat4 m_view;
+        glm::mat4 m_proj;
+        glm::mat4 m_viewProj;
     };
 
 
     class RenderObject {
     public:
-        std::shared_ptr<Model> m_Model{};
-        std::shared_ptr<Material> m_Material{};
-        Transform m_Transform{};
-        GpuObjectData m_GpuObjectData{};
+        std::shared_ptr<Model> m_pModel{};
+        std::shared_ptr<Material> m_pMaterial{};
+        Transform m_transform{};
+        GpuObjectData m_gpuObjectData{};
 
         void update();
     private:
@@ -43,23 +43,19 @@ namespace iris::graphics{
     public:
         Camera();
 
-        Transform m_Transform{};
-        GpuCameraData m_GpuCameraData{};
+        Transform m_transform{};
+        GpuCameraData m_gpuCameraData{};
 
         void update(VkExtent2D windowExtent, float dt);
     private:
-        glm::mat4 m_ViewMatrix = glm::mat4(1.0f);
-        glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);
+        glm::mat4 m_viewMatrix = glm::mat4(1.0f);
+        glm::mat4 m_projectionMatrix = glm::mat4(1.0f);
 
-        glm::vec3 m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
-        glm::vec3 m_Up = glm::vec3(0.0f, -1.0f, 0.0f);
-        glm::vec3 m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 m_target = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 m_up = glm::vec3(0.0f, -1.0f, 0.0f);
+        glm::vec3 m_front = glm::vec3(0.0f, 0.0f, -1.0f);
 
-        float m_Yaw   = -90.0f;
-        float m_Pitch =  0.0f;
-        float m_Fov   =  45.0f;
-
-        float m_Speed = 100.0f;
+        float m_speed = 100.0f;
     };
 
 }

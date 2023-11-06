@@ -28,22 +28,22 @@ namespace iris::graphics{
         allocatorInfo.physicalDevice = getPhysicalDevice();
         allocatorInfo.device = getDevice();
         allocatorInfo.instance = getInstance();
-        vmaCreateAllocator(&allocatorInfo, &m_Allocator);
+        vmaCreateAllocator(&allocatorInfo, &m_allocator);
     }
 
     Device::~Device() {
-        vmaDestroyAllocator(m_Allocator);
+        vmaDestroyAllocator(m_allocator);
 
-        vkDestroyFence(m_Device, m_UploadContext.uploadFence, nullptr);
-        vkDestroyCommandPool(m_Device, m_UploadContext.commandPool, nullptr);
+        vkDestroyFence(m_device, m_uploadContext.m_uploadFence, nullptr);
+        vkDestroyCommandPool(m_device, m_uploadContext.m_commandPool, nullptr);
 
-        vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
-        vkDestroyDevice(m_Device, nullptr);
-        if (m_EnableValidationLayers) {
-            Debugger::freeDebugCallback(m_Instance);
+        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+        vkDestroyDevice(m_device, nullptr);
+        if (m_cEnableValidationLayers) {
+            Debugger::freeDebugCallback(m_instance);
         }
-        vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
-        vkDestroyInstance(m_Instance, nullptr);
+        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+        vkDestroyInstance(m_instance, nullptr);
     }
 
     ///////////////////////
@@ -55,52 +55,52 @@ namespace iris::graphics{
 
         auto extensions = getRequiredInstanceExtensions();
 
-        VkInstanceCreateInfo instanceInfo = Initializers::createInstanceInfo(appInfo, extensions,m_cValidationLayers,
-                                                                             m_EnableValidationLayers);
-        Debugger::vkCheck(vkCreateInstance(&instanceInfo, nullptr, &m_Instance),
+        VkInstanceCreateInfo instanceInfo = Initializers::createInstanceInfo(appInfo, extensions, m_cValidationLayers,
+                                                                             m_cEnableValidationLayers);
+        Debugger::vkCheck(vkCreateInstance(&instanceInfo, nullptr, &m_instance),
                           "failed to create instance");
-        Debugger::setupDebugging(m_Instance);
+        Debugger::setupDebugging(m_instance);
     }
 
     void Device::createSurface() {
-        m_rWindow.createWindowSurface(m_Instance, &m_Surface);
+        m_rWindow.createWindowSurface(m_instance, &m_surface);
     }
 
     void Device::chosePhysicalDevice() {
         uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
         if (deviceCount == 0) {
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+        vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
 
         for (const auto &device : devices) {
             auto props = VkPhysicalDeviceProperties{};
             vkGetPhysicalDeviceProperties(device, &props);
             if (props.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-                m_ChosenGpu = device;
+                m_chosenGpu = device;
                 break;
             }
             else{
-                m_ChosenGpu = device;
+                m_chosenGpu = device;
             }
         }
 
-        if (m_ChosenGpu == VK_NULL_HANDLE) {
+        if (m_chosenGpu == VK_NULL_HANDLE) {
             throw std::runtime_error("failed to find a suitable GPU!");
         }
 
-        vkGetPhysicalDeviceProperties(m_ChosenGpu, &m_ChosenGpuProperties);
-        std::cout << "Chosen gpu is : " << m_ChosenGpuProperties.deviceName << std::endl;
+        vkGetPhysicalDeviceProperties(m_chosenGpu, &m_chosenGpuProperties);
+        std::cout << "Chosen gpu is : " << m_chosenGpuProperties.deviceName << std::endl;
     }
 
     void Device::createLogicalDevice() {
         findQueueFamilies();
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = {m_QueueFamilyIndices.graphicsFamily.value(), m_QueueFamilyIndices.presentFamily.value()};
+        std::set<uint32_t> uniqueQueueFamilies = {m_queueFamilyIndices.m_graphicsFamily.value(), m_queueFamilyIndices.m_presentFamily.value()};
 
         float queuePriority = 1.0f;
         for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -112,19 +112,19 @@ namespace iris::graphics{
         VkPhysicalDeviceFeatures deviceFeatures{}; // used to specify features we will use
         VkDeviceCreateInfo createInfo = Initializers::createDeviceInfo(queueCreateInfos,
                                                                        m_cDeviceExtensions,
-                                                                        m_cValidationLayers, deviceFeatures,
-                                                                        m_EnableValidationLayers);
+                                                                       m_cValidationLayers, deviceFeatures,
+                                                                       m_cEnableValidationLayers);
 
-        Debugger::vkCheck(vkCreateDevice(m_ChosenGpu, &createInfo, nullptr, &m_Device), "failed to create logical device");
+        Debugger::vkCheck(vkCreateDevice(m_chosenGpu, &createInfo, nullptr, &m_device), "failed to create logical device");
 
-        vkGetDeviceQueue(m_Device, m_QueueFamilyIndices.graphicsFamily.value(), 0, &m_GraphicsQueue);
-        vkGetDeviceQueue(m_Device, m_QueueFamilyIndices.presentFamily.value(), 0, &m_PresentQueue);
+        vkGetDeviceQueue(m_device, m_queueFamilyIndices.m_graphicsFamily.value(), 0, &m_graphicsQueue);
+        vkGetDeviceQueue(m_device, m_queueFamilyIndices.m_presentFamily.value(), 0, &m_presentQueue);
     }
 
     void Device::createCommandPool() {
-        VkCommandPoolCreateInfo commandPoolInfo = Initializers::createCommandPoolInfo(m_QueueFamilyIndices.graphicsFamily.value(),
+        VkCommandPoolCreateInfo commandPoolInfo = Initializers::createCommandPoolInfo(m_queueFamilyIndices.m_graphicsFamily.value(),
                                                                                       VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-        Debugger::vkCheck(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_CommandPool)
+        Debugger::vkCheck(vkCreateCommandPool(m_device, &commandPoolInfo, nullptr, &m_commandPool)
                 , "failed to create command pool");
     }
 
@@ -133,17 +133,17 @@ namespace iris::graphics{
         VkFenceCreateInfo fenceInfo = {};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-        Debugger::vkCheck(vkCreateFence(m_Device, &fenceInfo, nullptr, &m_UploadContext.uploadFence),
+        Debugger::vkCheck(vkCreateFence(m_device, &fenceInfo, nullptr, &m_uploadContext.m_uploadFence),
                           "could not create upload contexts fence");
 
-        VkCommandPoolCreateInfo commandPoolInfo = Initializers::createCommandPoolInfo(m_QueueFamilyIndices.graphicsFamily.value(),0);
-        Debugger::vkCheck(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_UploadContext.commandPool),
+        VkCommandPoolCreateInfo commandPoolInfo = Initializers::createCommandPoolInfo(m_queueFamilyIndices.m_graphicsFamily.value(), 0);
+        Debugger::vkCheck(vkCreateCommandPool(m_device, &commandPoolInfo, nullptr, &m_uploadContext.m_commandPool),
                           "could not create upload contexts command pool");
 
         //allocate the default command buffer that we will use for the instant commands
-        VkCommandBufferAllocateInfo cmdAllocInfo = Initializers::createCommandBufferAllocateInfo(m_UploadContext.commandPool, 1);
+        VkCommandBufferAllocateInfo cmdAllocInfo = Initializers::createCommandBufferAllocateInfo(m_uploadContext.m_commandPool, 1);
 
-        Debugger::vkCheck(vkAllocateCommandBuffers(m_Device, &cmdAllocInfo, &m_UploadContext.commandBuffer),
+        Debugger::vkCheck(vkAllocateCommandBuffers(m_device, &cmdAllocInfo, &m_uploadContext.m_commandBuffer),
                           "could not create upload contexts command");
     }
 
@@ -154,7 +154,7 @@ namespace iris::graphics{
 
         std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-        if (m_EnableValidationLayers) {
+        if (m_cEnableValidationLayers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
 
@@ -164,27 +164,27 @@ namespace iris::graphics{
     void Device::findQueueFamilies() {
 
         uint32_t queueFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(m_ChosenGpu, &queueFamilyCount,
+        vkGetPhysicalDeviceQueueFamilyProperties(m_chosenGpu, &queueFamilyCount,
                                                  nullptr); // get the number of queue families
 
         std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(m_ChosenGpu, &queueFamilyCount,
+        vkGetPhysicalDeviceQueueFamilyProperties(m_chosenGpu, &queueFamilyCount,
                                                  queueFamilies.data()); // get the queue families
 
         int i = 0;
         for (const auto &queueFamily : queueFamilies) {
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) { // check if the queue family has the capability of presenting to our window surface
-                m_QueueFamilyIndices.graphicsFamily = i;
+                m_queueFamilyIndices.m_graphicsFamily = i;
             }
 
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(m_ChosenGpu, i, m_Surface, &presentSupport); // check if the queue family has the capability of presenting to our window surface
+            vkGetPhysicalDeviceSurfaceSupportKHR(m_chosenGpu, i, m_surface, &presentSupport); // check if the queue family has the capability of presenting to our window surface
 
             if (presentSupport) {
-                m_QueueFamilyIndices.presentFamily = i;
+                m_queueFamilyIndices.m_presentFamily = i;
             }
 
-            if (m_QueueFamilyIndices.isComplete()) {
+            if (m_queueFamilyIndices.isComplete()) {
                 break;
             }
 
@@ -198,7 +198,7 @@ namespace iris::graphics{
 
     uint32_t Device::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const {
         VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(m_ChosenGpu, &memProperties);
+        vkGetPhysicalDeviceMemoryProperties(m_chosenGpu, &memProperties);
 
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
             if ((typeFilter & (1 << i)) &&
@@ -214,7 +214,7 @@ namespace iris::graphics{
                                          VkFormatFeatureFlags features) const {
         for (VkFormat format : candidates) {
             VkFormatProperties props;
-            vkGetPhysicalDeviceFormatProperties(m_ChosenGpu, format, &props);
+            vkGetPhysicalDeviceFormatProperties(m_chosenGpu, format, &props);
 
             if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
                 return format;
@@ -227,7 +227,7 @@ namespace iris::graphics{
 
     VkSampleCountFlagBits Device::getMaxUsableSampleCount() const {
         VkPhysicalDeviceProperties physicalDeviceProperties;
-        vkGetPhysicalDeviceProperties(m_ChosenGpu, &physicalDeviceProperties);
+        vkGetPhysicalDeviceProperties(m_chosenGpu, &physicalDeviceProperties);
 
         VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts &
                                     physicalDeviceProperties.limits.framebufferDepthSampleCounts;
@@ -243,26 +243,26 @@ namespace iris::graphics{
 
     SwapChainSupportDetails Device::getSwapChainSupport() const {
         SwapChainSupportDetails details;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_ChosenGpu, m_Surface, &details.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_chosenGpu, m_surface, &details.m_capabilities);
 
         uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(m_ChosenGpu, m_Surface, &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(m_chosenGpu, m_surface, &formatCount, nullptr);
 
         if (formatCount != 0) {
-            details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(m_ChosenGpu, m_Surface, &formatCount, details.formats.data());
+            details.m_formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(m_chosenGpu, m_surface, &formatCount, details.m_formats.data());
         }
 
         uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(m_ChosenGpu, m_Surface, &presentModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(m_chosenGpu, m_surface, &presentModeCount, nullptr);
 
         if (presentModeCount != 0) {
-            details.presentModes.resize(presentModeCount);
+            details.m_presentModes.resize(presentModeCount);
             vkGetPhysicalDeviceSurfacePresentModesKHR(
-                    m_ChosenGpu,
-                    m_Surface,
+                    m_chosenGpu,
+                    m_surface,
                     &presentModeCount,
-                    details.presentModes.data());
+                    details.m_presentModes.data());
         }
         return details;
     }
@@ -270,21 +270,21 @@ namespace iris::graphics{
     void
     Device::createImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image,
                                 VkDeviceMemory &imageMemory) {
-        Debugger::vkCheck(vkCreateImage(m_Device, &imageInfo, nullptr, &image)
+        Debugger::vkCheck(vkCreateImage(m_device, &imageInfo, nullptr, &image)
                 , "failed to create image");
 
         VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
+        vkGetImageMemoryRequirements(m_device, image, &memRequirements);
 
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-        Debugger::vkCheck(vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory),
+        Debugger::vkCheck(vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory),
                           "failed to allocate image memory");
 
-        Debugger::vkCheck(vkBindImageMemory(m_Device, image, imageMemory, 0),
+        Debugger::vkCheck(vkBindImageMemory(m_device, image, imageMemory, 0),
                           "failed to bind image memory");
     }
 
@@ -304,27 +304,27 @@ namespace iris::graphics{
         AllocatedBuffer newBuffer{};
 
         //allocate the buffer
-        Debugger::vkCheck(vmaCreateBuffer(m_Allocator, &bufferInfo, &vmaAllocInfo,
-                                          &newBuffer.buffer,
-                                          &newBuffer.allocation,
+        Debugger::vkCheck(vmaCreateBuffer(m_allocator, &bufferInfo, &vmaAllocInfo,
+                                          &newBuffer.m_buffer,
+                                          &newBuffer.m_allocation,
                                           nullptr), "Failed to allocate vertex buffer");
 
         return newBuffer;
     }
 
     void Device::destroyBuffer(AllocatedBuffer &buffer) {
-        vmaDestroyBuffer(m_Allocator, buffer.buffer, buffer.allocation);
+        vmaDestroyBuffer(m_allocator, buffer.m_buffer, buffer.m_allocation);
     }
 
     void Device::copyToBuffer(void *src, AllocatedBuffer &dst, size_t size) {
         void *data;
-        vmaMapMemory(m_Allocator, dst.allocation, &data);
+        vmaMapMemory(m_allocator, dst.m_allocation, &data);
         memcpy(data, src, size);
-        vmaUnmapMemory(m_Allocator, dst.allocation);
+        vmaUnmapMemory(m_allocator, dst.m_allocation);
     }
 
     void Device::immediateSubmit(std::function<void(VkCommandBuffer)> &&function) {
-        VkCommandBuffer cmd = m_UploadContext.commandBuffer;
+        VkCommandBuffer cmd = m_uploadContext.m_commandBuffer;
 
         //begin the command buffer recording. We will use this command buffer exactly once before resetting, so we tell vulkan that
         VkCommandBufferBeginInfo cmdBeginInfo = Initializers::createCommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
@@ -351,14 +351,14 @@ namespace iris::graphics{
 
         //submit command buffer to the queue and execute it.
         // uploadFence will now block until the graphic commands finish execution
-        Debugger::vkCheck(vkQueueSubmit(m_GraphicsQueue, 1, &submit, m_UploadContext.uploadFence)
+        Debugger::vkCheck(vkQueueSubmit(m_graphicsQueue, 1, &submit, m_uploadContext.m_uploadFence)
                 , "Failed to submit command buffer on immediateSubmit!");
 
-        vkWaitForFences(m_Device, 1, &m_UploadContext.uploadFence, true, 9999999999);
-        vkResetFences(m_Device, 1, &m_UploadContext.uploadFence);
+        vkWaitForFences(m_device, 1, &m_uploadContext.m_uploadFence, true, 9999999999);
+        vkResetFences(m_device, 1, &m_uploadContext.m_uploadFence);
 
         // reset the command buffers inside the command pool
-        vkResetCommandPool(m_Device, m_UploadContext.commandPool, 0);
+        vkResetCommandPool(m_device, m_uploadContext.m_commandPool, 0);
     }
 
     AllocatedImage Device::loadTexture(const std::string &filePath) {
@@ -400,9 +400,9 @@ namespace iris::graphics{
         AllocatedBuffer stagingBuffer = createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 
         void* data;
-        vmaMapMemory(m_Allocator, stagingBuffer.allocation, &data);
+        vmaMapMemory(m_allocator, stagingBuffer.m_allocation, &data);
         memcpy(data, pixel_ptr, static_cast<size_t>(imageSize));
-        vmaUnmapMemory(m_Allocator, stagingBuffer.allocation);
+        vmaUnmapMemory(m_allocator, stagingBuffer.m_allocation);
 
         stbi_image_free(pixels);
 
@@ -419,9 +419,9 @@ namespace iris::graphics{
         dimg_allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
         //allocate and create the image
-        vmaCreateImage(m_Allocator, &dimg_info,
-                       &dimg_allocinfo,&outImage.image,
-                       &outImage.allocation, nullptr);
+        vmaCreateImage(m_allocator, &dimg_info,
+                       &dimg_allocinfo, &outImage.m_image,
+                       &outImage.m_allocation, nullptr);
 
         //transition image to transfer-receiver
         immediateSubmit([&](VkCommandBuffer cmd) {
@@ -437,7 +437,7 @@ namespace iris::graphics{
 
             imageBarrier_toTransfer.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             imageBarrier_toTransfer.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-            imageBarrier_toTransfer.image = outImage.image;
+            imageBarrier_toTransfer.image = outImage.m_image;
             imageBarrier_toTransfer.subresourceRange = range;
 
             imageBarrier_toTransfer.srcAccessMask = 0;
@@ -462,7 +462,7 @@ namespace iris::graphics{
             copyRegion.imageExtent = imageExtent;
 
             //copy the buffer into the image
-            vkCmdCopyBufferToImage(cmd, stagingBuffer.buffer, outImage.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+            vkCmdCopyBufferToImage(cmd, stagingBuffer.m_buffer, outImage.m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
 
             VkImageMemoryBarrier imageBarrier_toReadable = imageBarrier_toTransfer;
 
@@ -476,7 +476,7 @@ namespace iris::graphics{
             vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier_toReadable);
         });
 
-        vmaDestroyBuffer(m_Allocator, stagingBuffer.buffer, stagingBuffer.allocation);
+        vmaDestroyBuffer(m_allocator, stagingBuffer.m_buffer, stagingBuffer.m_allocation);
 
         std::cout << "Texture loaded successfully " << filePath << std::endl;
 

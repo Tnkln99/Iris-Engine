@@ -20,21 +20,21 @@ namespace iris::graphics{
         void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
         inline static struct MouseInfo{
-            double xPos;
-            double yPos;
+            double m_xPos;
+            double m_yPos;
         } m_sMouseInfo{};
         inline static struct KeyInfo{
-            int key;
-            int scancode;
-            int action;
-            int mods;
+            int m_key;
+            int m_scancode;
+            int m_action;
+            int m_mods;
         } m_sKeyInfo{};
     private:
         GLFWwindow * m_pWindow;
 
-        int m_Width;
-        int m_Height;
-        std::string m_Name;
+        int m_width;
+        int m_height;
+        std::string m_name;
 
         static void mouseCallback(GLFWwindow* window, double xPos, double yPos);
         static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

@@ -25,9 +25,9 @@ namespace iris::graphics{
 
         static void clear(Device& device);
     private:
-        static std::unordered_map<std::string, std::shared_ptr<Model>> m_Models;
-        static std::unordered_map<std::string, std::shared_ptr<Material>> m_Materials;
-        static std::unordered_map<std::string, std::shared_ptr<Texture>> m_Textures;
+        static std::unordered_map<std::string, std::shared_ptr<Model>> m_models;
+        static std::unordered_map<std::string, std::shared_ptr<Material>> m_materials;
+        static std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     };
 }
 

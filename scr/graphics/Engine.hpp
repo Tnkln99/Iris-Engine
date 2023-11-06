@@ -16,11 +16,11 @@ namespace iris::graphics {
 
         void run();
     private:
-        Window m_Window{800, 600, "Iris Engine"};
-        Device m_Device{m_Window};
-        Renderer m_Renderer{m_Device, m_Window};
+        Window m_window{800, 600, "Iris Engine"};
+        Device m_device{m_window};
+        Renderer m_renderer{m_device, m_window};
 
-        Scene m_Viewport{m_Device, m_Renderer};
+        Scene m_viewport{m_device, m_renderer};
     };
 }
 

@@ -18,9 +18,9 @@ namespace iris::graphics{
         VkCommandBuffer beginFrame();
         void endFrame(VkCommandBuffer cmd);
 
-        VkRenderPass getRenderPass(){ return m_RenderPass; }
+        VkRenderPass getRenderPass(){ return m_renderPass; }
         int getMaximumFramesInFlight(){ return m_pSwapchain->m_cMaxImagesOnFlight; }
-        int getCurrentFrame(){ return m_FrameCount % m_pSwapchain->m_cMaxImagesOnFlight;}
+        int getCurrentFrame(){ return m_frameCount % m_pSwapchain->m_cMaxImagesOnFlight;}
         VkExtent2D getSwapchainExtent(){ return m_pSwapchain->getExtent(); }
 
         void postRender();
@@ -29,10 +29,10 @@ namespace iris::graphics{
         Window& m_rWindow;
         std::unique_ptr<Swapchain> m_pSwapchain;
 
-        int m_FrameCount{0};
+        int m_frameCount{0};
 
-        std::vector<VkCommandBuffer> m_CommandBuffers{};
-        VkRenderPass m_RenderPass{};
+        std::vector<VkCommandBuffer> m_commandBuffers{};
+        VkRenderPass m_renderPass{};
 
 
         void createCommandBuffers();

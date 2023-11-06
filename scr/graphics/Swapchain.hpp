@@ -14,13 +14,13 @@ namespace iris::graphics{
 
         const int m_cMaxImagesOnFlight = 2;
 
-        unsigned int getImagesCount() { return m_SwapchainImages.size(); }
-        VkExtent2D getExtent() { return m_SwapChainExtent; }
+        unsigned int getImagesCount() { return m_swapchainImages.size(); }
+        VkExtent2D getExtent() { return m_swapChainExtent; }
 
         uint32_t acquireNextImage(int currentFrame);
         void submitCommandBuffers(const VkCommandBuffer *buffers, int currentFrameIndex);
 
-        [[nodiscard]] VkFormat getSwapchainImageFormat() const { return m_SwapchainImageFormat; }
+        [[nodiscard]] VkFormat getSwapchainImageFormat() const { return m_swapchainImageFormat; }
         [[nodiscard]] VkFormat findDepthFormat() const {
             return m_rDevice.findSupportedFormat(
                     {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
@@ -29,32 +29,32 @@ namespace iris::graphics{
         }
 
         void createFramebuffers(VkRenderPass renderPass);
-        VkFramebuffer getFrameBuffer(int index) { return m_SwapchainFramebuffers[index]; }
+        VkFramebuffer getFrameBuffer(int index) { return m_swapchainFramebuffers[index]; }
     private:
         Device& m_rDevice;
 
-        VkSwapchainKHR m_Swapchain{};
-        uint32_t m_SwapchainImageIndex{};
+        VkSwapchainKHR m_swapchain{};
+        uint32_t m_swapchainImageIndex{};
 
-        std::vector<VkFramebuffer> m_SwapchainFramebuffers{};
+        std::vector<VkFramebuffer> m_swapchainFramebuffers{};
 
-        std::vector<VkImage> m_DepthImages;
-        std::vector<VkImageView> m_DepthImageViews;
-        std::vector<VkDeviceMemory> m_DepthImageMemories;
+        std::vector<VkImage> m_depthImages;
+        std::vector<VkImageView> m_depthImageViews;
+        std::vector<VkDeviceMemory> m_depthImageMemories;
 
-        std::vector<VkImage> m_SwapchainImages;
-        std::vector<VkImageView> m_SwapchainImageViews;
+        std::vector<VkImage> m_swapchainImages;
+        std::vector<VkImageView> m_swapchainImageViews;
 
-        VkExtent2D m_WindowExtent{};
+        VkExtent2D m_windowExtent{};
 
-        VkFormat m_SwapchainImageFormat;
-        VkFormat m_SwapChainDepthFormat;
-        VkExtent2D m_SwapChainExtent{};
+        VkFormat m_swapchainImageFormat;
+        VkFormat m_swapChainDepthFormat;
+        VkExtent2D m_swapChainExtent{};
 
-        std::vector<VkSemaphore> m_PresentSemaphores;
-        std::vector<VkSemaphore> m_RenderSemaphores;
-        std::vector<VkFence> inFlightFences;
-        std::vector<VkFence> imagesInFlight;
+        std::vector<VkSemaphore> m_presentSemaphores;
+        std::vector<VkSemaphore> m_renderSemaphores;
+        std::vector<VkFence> m_inFlightFences;
+        std::vector<VkFence> m_imagesInFlight;
 
         void createSwapchain();
         void createImageViews();
