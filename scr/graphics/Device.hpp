@@ -26,7 +26,7 @@ namespace iris::graphics{
     struct Texture{
         std::string m_name;
 
-        AllocatedImage m_image;
+        AllocatedImage m_allocatedImage;
         VkImageView m_imageView;
     };
 
@@ -91,6 +91,7 @@ namespace iris::graphics{
 
         AllocatedBuffer createBuffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
         void destroyBuffer(AllocatedBuffer& buffer);
+        void destroyImage(AllocatedImage& image);
         void copyToBuffer(void * src, AllocatedBuffer& dst, size_t size);
 
         void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);

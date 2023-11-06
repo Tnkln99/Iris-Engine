@@ -4,11 +4,12 @@
 
 #include <vector>
 #include <set>
-#define VMA_IMPLEMENTATION
-#include <vk_mem_alloc.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
 
 namespace iris::graphics{
      //////////////////////////////
@@ -314,6 +315,11 @@ namespace iris::graphics{
 
     void Device::destroyBuffer(AllocatedBuffer &buffer) {
         vmaDestroyBuffer(m_allocator, buffer.m_buffer, buffer.m_allocation);
+    }
+
+
+    void Device::destroyImage(AllocatedImage &image) {
+        vmaDestroyImage(m_allocator, image.m_image, image.m_allocation);
     }
 
     void Device::copyToBuffer(void *src, AllocatedBuffer &dst, size_t size) {
