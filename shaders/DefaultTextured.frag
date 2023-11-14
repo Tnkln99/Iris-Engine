@@ -41,7 +41,7 @@ void main()
     // specular
     vec3 viewDir = normalize(cameraPos - fragPosWorld);
     vec3 reflectDir = reflect(-directionToLight, fragNormalWorld);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 10.0);
 
 
     vec3 ambientColor = texture(ambient,texCoord).xyz * ambientLight;

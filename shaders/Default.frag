@@ -25,6 +25,7 @@ void main()
     vec4 ambientLightColor = vec4(1.f, 1.f, 1.f, .02f); // w is intesity
     vec3 lightPosition = vec3(0,1,1);
     vec4 lightColor = vec4(1,1,1,1);
+    vec3 cameraPos = vec3(inverse(cameraData.view)[3]);
 
     vec3 directionToLight = lightPosition - fragPosWorld;
     float attenuation = 1.0f / dot(directionToLight, directionToLight); // distance squared
@@ -33,5 +34,12 @@ void main()
     vec3 ambientLight = ambientLightColor.xyz * ambientLightColor.w;
     vec3 diffuseLight = finalLightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)),0);
 
+    // specular
+    vec3 viewDir = normalize(cameraPos - fragPosWorld);
+    vec3 reflectDir = reflect(-directionToLight, fragNormalWorld);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 0.4);
+    vec3 specularLight = spec * lightColor.xyz * lightColor.w;
+
+    // I dont add the specular light to calculations because it looks bad
     outColor = vec4((diffuseLight + ambientLight) * fragColor, 1.0);
 }

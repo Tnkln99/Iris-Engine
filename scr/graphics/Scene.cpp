@@ -8,7 +8,7 @@
 
 namespace iris::graphics{
 
-    Scene::Scene(Device& device, Renderer &renderer) : m_rDevice{device}, m_rRenderer{renderer} {
+    Scene::Scene(Device& device, Rasteriser &renderer) : m_rDevice{device}, m_rRenderer{renderer} {
         loadScene();
         utils::Timer::init();
     }
@@ -233,6 +233,7 @@ namespace iris::graphics{
         textured.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
         textured.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
         textured.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        textured.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
         m_renderObjects.push_back(textured);
     }
 }

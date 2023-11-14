@@ -1,4 +1,4 @@
-#include "Renderer.hpp"
+#include "Rasteriser.hpp"
 #include "Initializers.hpp"
 #include "Debugger.hpp"
 
@@ -6,7 +6,7 @@
 
 namespace iris::graphics{
 
-    Renderer::Renderer(Device &device, Window& window)
+    Rasteriser::Rasteriser(Device &device, Window& window)
     : m_rDevice{device}, m_rWindow{window}
     {
         auto extent = m_rWindow.getExtent();
@@ -18,20 +18,20 @@ namespace iris::graphics{
     }
 
 
-    Renderer::~Renderer() {
+    Rasteriser::~Rasteriser() {
         vkDeviceWaitIdle(m_rDevice.getDevice());
         freeCommandBuffers();
         vkDestroyRenderPass(m_rDevice.getDevice(), m_renderPass, nullptr);
     }
 
-    void Renderer::createCommandBuffers() {
+    void Rasteriser::createCommandBuffers() {
         m_commandBuffers.resize(m_pSwapchain->m_cMaxImagesOnFlight);
         VkCommandBufferAllocateInfo allocInfo = Initializers::createCommandBufferAllocateInfo(m_rDevice.getCommandPool(), static_cast<uint32_t>(m_commandBuffers.size()));
         Debugger::vkCheck(vkAllocateCommandBuffers(m_rDevice.getDevice(), &allocInfo, m_commandBuffers.data()),
                           "Failed to allocate command buffers!");
     }
 
-    void Renderer::createRenderPass() {
+    void Rasteriser::createRenderPass() {
         // the renderpass will use this color attachment.
         VkAttachmentDescription colorAttachment = {};
         //the attachment will have the format needed by the swapchain
@@ -113,7 +113,7 @@ namespace iris::graphics{
                 , "Failed to create render pass!");
     }
 
-    VkCommandBuffer Renderer::beginFrame() {
+    VkCommandBuffer Rasteriser::beginFrame() {
         uint32_t imageIndex = m_pSwapchain->acquireNextImage(getCurrentFrame());
         auto cmd = m_commandBuffers[getCurrentFrame()];
         //now that we are sure that the commands finished executing, we can safely reset the command buffer to begin recording again.
@@ -157,7 +157,7 @@ namespace iris::graphics{
         return cmd;
     }
 
-    void Renderer::endFrame(VkCommandBuffer cmd) {
+    void Rasteriser::endFrame(VkCommandBuffer cmd) {
         vkCmdEndRenderPass(cmd);
         Debugger::vkCheck(vkEndCommandBuffer(cmd), "Failed to record command buffer!");
 
@@ -165,7 +165,7 @@ namespace iris::graphics{
         m_frameCount++;
     }
 
-    void Renderer::freeCommandBuffers() {
+    void Rasteriser::freeCommandBuffers() {
         vkFreeCommandBuffers(
                 m_rDevice.getDevice(),
                 m_rDevice.getCommandPool(),
@@ -174,7 +174,7 @@ namespace iris::graphics{
         m_commandBuffers.clear();
     }
 
-    void Renderer::postRender() {
+    void Rasteriser::postRender() {
         vkDeviceWaitIdle(m_rDevice.getDevice());
     }
 }
