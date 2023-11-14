@@ -1,17 +1,9 @@
 #include "Rasteriser.hpp"
-#include "Initializers.hpp"
-#include "Debugger.hpp"
-
-#include <memory>
 
 namespace iris::graphics{
 
-    Rasteriser::Rasteriser(Device &device, Window& window)
-    : m_rDevice{device}, m_rWindow{window}
+    Rasteriser::Rasteriser(Device &device, Window& window) : Renderer(device, window)
     {
-        auto extent = m_rWindow.getExtent();
-        m_pSwapchain = std::make_unique<Swapchain>(device, extent);
-
         createCommandBuffers();
         createRenderPass();
         m_pSwapchain->createFramebuffers(m_renderPass);
@@ -22,13 +14,6 @@ namespace iris::graphics{
         vkDeviceWaitIdle(m_rDevice.getDevice());
         freeCommandBuffers();
         vkDestroyRenderPass(m_rDevice.getDevice(), m_renderPass, nullptr);
-    }
-
-    void Rasteriser::createCommandBuffers() {
-        m_commandBuffers.resize(m_pSwapchain->m_cMaxImagesOnFlight);
-        VkCommandBufferAllocateInfo allocInfo = Initializers::createCommandBufferAllocateInfo(m_rDevice.getCommandPool(), static_cast<uint32_t>(m_commandBuffers.size()));
-        Debugger::vkCheck(vkAllocateCommandBuffers(m_rDevice.getDevice(), &allocInfo, m_commandBuffers.data()),
-                          "Failed to allocate command buffers!");
     }
 
     void Rasteriser::createRenderPass() {
@@ -163,15 +148,6 @@ namespace iris::graphics{
 
         m_pSwapchain->submitCommandBuffers(&cmd, getCurrentFrame());
         m_frameCount++;
-    }
-
-    void Rasteriser::freeCommandBuffers() {
-        vkFreeCommandBuffers(
-                m_rDevice.getDevice(),
-                m_rDevice.getCommandPool(),
-                static_cast<uint32_t>(m_commandBuffers.size()),
-                m_commandBuffers.data());
-        m_commandBuffers.clear();
     }
 
     void Rasteriser::postRender() {

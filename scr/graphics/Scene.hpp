@@ -1,7 +1,7 @@
 #ifndef IRIS_SCENE_HPP
 #define IRIS_SCENE_HPP
 
-#include "Rasteriser.hpp"
+#include "Renderers/Rasteriser.hpp"
 #include "Pipeline.hpp"
 #include "Descriptors.hpp"
 #include "Objects.hpp"
