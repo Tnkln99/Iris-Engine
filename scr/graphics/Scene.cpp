@@ -104,7 +104,7 @@ namespace iris::graphics{
 
         for(auto & uboBuffer : m_uboSceneBuffers)
         {
-            uboBuffer = m_rDevice.createBuffer(sizeof(GpuCameraData),VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            uboBuffer = m_rDevice.createBuffer(sizeof(GpuSceneData),VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                                VMA_MEMORY_USAGE_CPU_TO_GPU);
         }
 
@@ -139,7 +139,7 @@ namespace iris::graphics{
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(GpuObjectData);
+        pushConstantRange.size = sizeof(RenderObject::GpuObjectData);
 
         pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
         pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
