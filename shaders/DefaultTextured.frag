@@ -6,11 +6,13 @@ layout (location = 1) in vec3 fragPosWorld;
 layout (location = 2) in vec3 fragNormalWorld;
 layout (location = 3) in vec2 texCoord;
 
-layout(set = 0, binding = 0) uniform CameraBuffer{
-    mat4 view;
-    mat4 proj;
-    mat4 viewProj;
-} cameraData;
+layout(set = 0, binding = 0) uniform SceneBuffer{
+    mat4 projectionMatrix;
+    mat4 viewMatrix;
+    vec4 ambientLightColor;
+    vec3 lightPosition;
+    vec4 lightColor;
+} sceneData;
 
 layout(set = 1, binding = 0) uniform sampler2D ambient;
 layout(set = 1, binding = 1) uniform sampler2D diffuse;
@@ -26,16 +28,12 @@ layout (location = 0) out vec4 outColor;
 
 void main()
 {
-    vec4 ambientLightColor = vec4(1.f, 1.f, 1.f, .02f); // w is intesity
-    vec3 lightPosition = vec3(1,1,1);
-    vec4 lightColor = vec4(1,1,1,1);
-
-    vec3 cameraPos = vec3(inverse(cameraData.view)[3]);
-    vec3 directionToLight = lightPosition - fragPosWorld;
+    vec3 cameraPos = vec3(inverse(sceneData.viewMatrix)[3]);
+    vec3 directionToLight = sceneData.lightPosition - fragPosWorld;
     float attenuation = 1.0f / dot(directionToLight, directionToLight); // distance squared
 
-    vec3 finalLightColor = lightColor.xyz * lightColor.w * attenuation;
-    vec3 ambientLight = ambientLightColor.xyz * ambientLightColor.w;
+    vec3 finalLightColor = sceneData.lightColor.xyz * sceneData.lightColor.w * attenuation;
+    vec3 ambientLight = sceneData.ambientLightColor.xyz * sceneData.ambientLightColor.w;
     vec3 diffuseLight = finalLightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)),0);
 
     // specular

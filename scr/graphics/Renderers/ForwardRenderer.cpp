@@ -1,22 +1,28 @@
-#include "Rasteriser.hpp"
+#include "ForwardRenderer.hpp"
 
 namespace iris::graphics{
 
-    Rasteriser::Rasteriser(Device &device, Window& window) : Renderer(device, window)
-    {
+    ForwardRenderer::ForwardRenderer(Device &device, Window& window) : Renderer(device, window) {
+    }
+
+    void ForwardRenderer::init() {
         createCommandBuffers();
         createRenderPass();
         m_pSwapchain->createFramebuffers(m_renderPass);
     }
 
 
-    Rasteriser::~Rasteriser() {
+    ForwardRenderer::~ForwardRenderer() {
         vkDeviceWaitIdle(m_rDevice.getDevice());
-        freeCommandBuffers();
         vkDestroyRenderPass(m_rDevice.getDevice(), m_renderPass, nullptr);
     }
 
-    void Rasteriser::createRenderPass() {
+    void ForwardRenderer::postRender() {
+        vkDeviceWaitIdle(m_rDevice.getDevice());
+        freeCommandBuffers();
+    }
+
+    void ForwardRenderer::createRenderPass() {
         // the renderpass will use this color attachment.
         VkAttachmentDescription colorAttachment = {};
         //the attachment will have the format needed by the swapchain
@@ -98,7 +104,7 @@ namespace iris::graphics{
                 , "Failed to create render pass!");
     }
 
-    VkCommandBuffer Rasteriser::beginFrame() {
+    VkCommandBuffer ForwardRenderer::beginFrame() {
         uint32_t imageIndex = m_pSwapchain->acquireNextImage(getCurrentFrame());
         auto cmd = m_commandBuffers[getCurrentFrame()];
         //now that we are sure that the commands finished executing, we can safely reset the command buffer to begin recording again.
@@ -142,7 +148,7 @@ namespace iris::graphics{
         return cmd;
     }
 
-    void Rasteriser::endFrame(VkCommandBuffer cmd) {
+    void ForwardRenderer::endFrame(VkCommandBuffer cmd) {
         vkCmdEndRenderPass(cmd);
         Debugger::vkCheck(vkEndCommandBuffer(cmd), "Failed to record command buffer!");
 
@@ -150,7 +156,19 @@ namespace iris::graphics{
         m_frameCount++;
     }
 
-    void Rasteriser::postRender() {
-        vkDeviceWaitIdle(m_rDevice.getDevice());
+    void ForwardRenderer::createCommandBuffers() {
+        m_commandBuffers.resize(m_pSwapchain->m_cMaxImagesOnFlight);
+        VkCommandBufferAllocateInfo allocInfo = Initializers::createCommandBufferAllocateInfo(m_rDevice.getCommandPool(), static_cast<uint32_t>(m_commandBuffers.size()));
+        Debugger::vkCheck(vkAllocateCommandBuffers(m_rDevice.getDevice(), &allocInfo, m_commandBuffers.data()),
+                          "Failed to allocate command buffers!");
+    }
+
+    void ForwardRenderer::freeCommandBuffers() {
+        vkFreeCommandBuffers(
+                m_rDevice.getDevice(),
+                m_rDevice.getCommandPool(),
+                static_cast<uint32_t>(m_commandBuffers.size()),
+                m_commandBuffers.data());
+        m_commandBuffers.clear();
     }
 }

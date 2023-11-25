@@ -8,14 +8,14 @@
 
 namespace iris::graphics{
 
-    Scene::Scene(Device& device, Rasteriser &renderer) : m_rDevice{device}, m_rRenderer{renderer} {
-        loadScene();
+    Scene::Scene(Device& device, ForwardRenderer &renderer) : m_rDevice{device}, m_rRenderer{renderer} {
+        m_rRenderer.init();
         utils::Timer::init();
     }
 
 
     Scene::~Scene() {
-        for (auto & uboBuffer : m_uboCameraBuffers)
+        for (auto & uboBuffer : m_uboSceneBuffers)
         {
             m_rDevice.destroyBuffer(uboBuffer);
         }
@@ -25,16 +25,22 @@ namespace iris::graphics{
     void Scene::draw() {
         VkCommandBuffer cmd = m_rRenderer.beginFrame();
 
-        m_rDevice.copyToBuffer(&m_camera.m_gpuCameraData,
-                               m_uboCameraBuffers[m_rRenderer.getCurrentFrame()],
-                               sizeof(GpuCameraData));
-        m_camera.update(m_rRenderer.getSwapchainExtent(), utils::Timer::getDeltaTime());
+        m_sceneData.m_projectionMatrix = m_camera.m_projectionMatrix;
+        m_sceneData.m_viewMatrix = m_camera.m_viewMatrix;
+        m_sceneData.m_ambientLightColor = {1.f, 1.f, 1.f, .02f};
+        m_sceneData.m_lightPosition = {1.0f, 1.0f, 1.0f};
+        m_sceneData.m_lightColor = {0.0f, 1.0f, 1.0f, 1.0f};
 
+        m_rDevice.copyToBuffer(&m_sceneData,
+                               m_uboSceneBuffers[m_rRenderer.getCurrentFrame()],
+                               sizeof(GpuSceneData));
+
+        m_camera.update(m_rRenderer.getSwapchainExtent(), utils::Timer::getDeltaTime());
 
         std::shared_ptr<Model> lastModel = nullptr;
         std::shared_ptr<Material> lastMaterial = nullptr;
         for(auto & renderObject : m_renderObjects){
-            renderObject.update();
+            renderObject.updateInfo();
             auto material = renderObject.m_pMaterial;
             if(lastMaterial != material){
                 material->getPipeline()->bind(cmd);
@@ -45,7 +51,7 @@ namespace iris::graphics{
                         material->getPipeLineLayout(),
                         0,
                         1,
-                        &m_cameraDescriptorSets[m_rRenderer.getCurrentFrame()],
+                        &m_sceneDescriptorSets[m_rRenderer.getCurrentFrame()],
                         0,
                         nullptr
                 );
@@ -65,7 +71,7 @@ namespace iris::graphics{
                     material->getPipeLineLayout(),
                     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                     0,
-                    sizeof(GpuObjectData),
+                    sizeof(RenderObject::GpuObjectData),
                     &renderObject.m_gpuObjectData);
 
 
@@ -81,35 +87,22 @@ namespace iris::graphics{
     }
 
     void Scene::loadScene() {
-        loadModels();
-        loadImages();
         initDescriptorSets();
         initMaterials();
         initObjects();
     }
 
-    void Scene::loadModels() {
-        AssetsManager::loadModel(m_rDevice, "Star", "../assets/models/Star/Star.obj");
-        AssetsManager::loadModel(m_rDevice, "Plane", "../assets/models/Plane/Plane.obj");
-    }
-
-    void Scene::loadImages() {
-        AssetsManager::loadTexture(m_rDevice, "StarAmbient", "../assets/models/Star/Ambient.png");
-        AssetsManager::loadTexture(m_rDevice, "StarDiffuse", "../assets/models/Star/Diffuse.png");
-        AssetsManager::loadTexture(m_rDevice, "StarSpecular", "../assets/models/Star/Specular.png");
-    }
-
     void Scene::initDescriptorSets() {
         // initialize the global descriptor sets
-        m_cameraDescriptorSets.resize(m_rRenderer.getMaximumFramesInFlight());
-        m_uboCameraBuffers.resize(m_rRenderer.getMaximumFramesInFlight());
+        m_sceneDescriptorSets.resize(m_rRenderer.getMaximumFramesInFlight());
+        m_uboSceneBuffers.resize(m_rRenderer.getMaximumFramesInFlight());
 
         m_pGlobalPool = DescriptorPool::Builder(m_rDevice)
                 .setMaxSets(100)
                 .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100)
                 .build();
 
-        for(auto & uboBuffer : m_uboCameraBuffers)
+        for(auto & uboBuffer : m_uboSceneBuffers)
         {
             uboBuffer = m_rDevice.createBuffer(sizeof(GpuCameraData),VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                                VMA_MEMORY_USAGE_CPU_TO_GPU);
@@ -119,16 +112,16 @@ namespace iris::graphics{
                         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
                         .build();
 
-        for (int i = 0; i < m_cameraDescriptorSets.size(); i++)
+        for (int i = 0; i < m_sceneDescriptorSets.size(); i++)
         {
-            VkDescriptorBufferInfo cameraInfo;
-            cameraInfo.buffer = m_uboCameraBuffers[i].m_buffer;
-            cameraInfo.offset = 0;
-            cameraInfo.range = sizeof(GpuCameraData);
+            VkDescriptorBufferInfo sceneInfo;
+            sceneInfo.buffer = m_uboSceneBuffers[i].m_buffer;
+            sceneInfo.offset = 0;
+            sceneInfo.range = sizeof(GpuSceneData);
 
             DescriptorWriter(*m_pGlobalSetLayout, *m_pGlobalPool)
-                    .writeBuffer(0, &cameraInfo)
-                    .build(m_cameraDescriptorSets[i]);
+                    .writeBuffer(0, &sceneInfo)
+                    .build(m_sceneDescriptorSets[i]);
         }
 
         m_pTexturedSetLayout = DescriptorSetLayout::Builder(m_rDevice)
@@ -228,12 +221,12 @@ namespace iris::graphics{
         star.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
         m_renderObjects.push_back(star);
 
-        RenderObject textured{};
-        textured.m_pModel = AssetsManager::getModel("Star");
-        textured.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
-        textured.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
-        textured.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        textured.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
-        m_renderObjects.push_back(textured);
+        RenderObject texturedStar{};
+        texturedStar.m_pModel = AssetsManager::getModel("Star");
+        texturedStar.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
+        texturedStar.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
+        texturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        texturedStar.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
+        m_renderObjects.push_back(texturedStar);
     }
 }

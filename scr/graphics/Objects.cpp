@@ -64,11 +64,6 @@ namespace iris::graphics{
         };
     }
 
-    void RenderObject::update() {
-        m_gpuObjectData.m_modelMatrix = modelMatrix();
-        m_gpuObjectData.m_normalMatrix = normalMatrix();
-    }
-
     ////////////////////////////////////////////////////////////////////////////
 
     Camera::Camera() {
@@ -95,9 +90,5 @@ namespace iris::graphics{
                                    glm::vec3(0,0,0),
                                    m_up);
         m_projectionMatrix = glm::perspective(glm::radians(45.0f), (float)windowExtent.width / (float)windowExtent.height, 0.1f, 100.0f);
-
-        m_gpuCameraData.m_proj = m_projectionMatrix;
-        m_gpuCameraData.m_view = m_viewMatrix;
-        m_gpuCameraData.m_viewProj = m_projectionMatrix * m_viewMatrix;
     }
 }

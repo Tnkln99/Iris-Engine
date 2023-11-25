@@ -12,11 +12,13 @@ layout(location = 2) out vec3 fragNormalWorld;
 layout (location = 3) out vec2 texCoord;
 
 
-layout(set = 0, binding = 0) uniform CameraBuffer{
-    mat4 view;
-    mat4 proj;
-    mat4 viewProj;
-} cameraData;
+layout(set = 0, binding = 0) uniform SceneBuffer{
+    mat4 projectionMatrix;
+    mat4 viewMatrix;
+    vec4 ambientLightColor;
+    vec3 lightPosition;
+    vec4 lightColor;
+} sceneData;
 
 layout(push_constant) uniform Push{
     mat4 modelMatrix;
@@ -27,7 +29,7 @@ layout(push_constant) uniform Push{
 void main()
 {
     vec4 positionWorld = push.modelMatrix * vec4(pos, 1.0f);
-    gl_Position = cameraData.viewProj * positionWorld;
+    gl_Position = (sceneData.projectionMatrix * sceneData.viewMatrix) * positionWorld;
     fragNormalWorld = normalize(mat3(push.normalMatrix) * normal);
     fragPosWorld = positionWorld.xyz;
     fragColor = color;
