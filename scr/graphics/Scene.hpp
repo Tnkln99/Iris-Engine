@@ -12,8 +12,8 @@ namespace iris::graphics{
         glm::mat4 m_projectionMatrix;
         glm::mat4 m_viewMatrix;
         glm::vec4 m_ambientLightColor; // w is intesity
-        glm::vec3 m_lightPosition;
-        alignas(16) glm::vec4 m_lightColor;
+        int m_numLights;
+        PointLight::GpuPointLightData m_lights[10];
     };
 
     class Scene {
@@ -45,6 +45,7 @@ namespace iris::graphics{
 
         // this will stay on scene
         void initObjects();
+        void initLights();
     };
 }
 

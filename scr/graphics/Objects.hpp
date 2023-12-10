@@ -14,9 +14,6 @@ namespace iris::graphics{
         glm::vec3 m_rotation{};
     };
 
-
-
-
     class RenderObject {
     public:
         struct GpuObjectData{
@@ -62,8 +59,14 @@ namespace iris::graphics{
         float m_speed = 100.0f;
     };
 
-    class Light{
+    class PointLight{
+    public:
+        PointLight(glm::vec3 position, glm::vec3 color);
 
+        struct GpuPointLightData{
+            glm::vec3 m_lightPosition;
+            alignas(16) glm::vec4 m_lightColor;
+        }m_gpuLightData;
     };
 
 }

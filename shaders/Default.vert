@@ -11,13 +11,17 @@ layout(location = 1) out vec3 fragPosWorld;
 layout(location = 2) out vec3 fragNormalWorld;
 layout (location = 3) out vec2 texCoord;
 
+struct PointLight {
+    vec4 position; // ignore w
+    vec4 color;  // w is intensity
+};
 
 layout(set = 0, binding = 0) uniform SceneBuffer{
     mat4 projectionMatrix;
     mat4 viewMatrix;
     vec4 ambientLightColor;
-    vec3 lightPosition;
-    vec4 lightColor;
+    int numLights;
+    PointLight pointLights[10];
 } sceneData;
 
 layout(push_constant) uniform Push{

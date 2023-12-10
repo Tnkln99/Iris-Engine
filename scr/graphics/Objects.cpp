@@ -91,4 +91,9 @@ namespace iris::graphics{
                                    m_up);
         m_projectionMatrix = glm::perspective(glm::radians(45.0f), (float)windowExtent.width / (float)windowExtent.height, 0.1f, 100.0f);
     }
+
+    PointLight::PointLight(glm::vec3 position, glm::vec3 color) {
+        m_gpuLightData.m_lightPosition = position;
+        m_gpuLightData.m_lightColor = glm::vec4(color, 1.0f);
+    }
 }

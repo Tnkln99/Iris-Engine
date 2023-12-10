@@ -11,6 +11,8 @@ namespace iris::graphics{
     Scene::Scene(Device& device, ForwardRenderer &renderer) : m_rDevice{device}, m_rRenderer{renderer} {
         m_rRenderer.init();
         utils::Timer::init();
+
+        m_sceneData.m_ambientLightColor = {1.f, 1.f, 1.f, .02f};
     }
 
 
@@ -27,15 +29,13 @@ namespace iris::graphics{
 
         m_sceneData.m_projectionMatrix = m_camera.m_projectionMatrix;
         m_sceneData.m_viewMatrix = m_camera.m_viewMatrix;
-        m_sceneData.m_ambientLightColor = {1.f, 1.f, 1.f, .02f};
-        m_sceneData.m_lightPosition = {1.0f, 1.0f, 1.0f};
-        m_sceneData.m_lightColor = {0.0f, 1.0f, 1.0f, 1.0f};
 
         m_rDevice.copyToBuffer(&m_sceneData,
                                m_uboSceneBuffers[m_rRenderer.getCurrentFrame()],
                                sizeof(GpuSceneData));
 
-        m_camera.update(m_rRenderer.getSwapchainExtent(), utils::Timer::getDeltaTime());
+        m_camera.update(m_rRenderer.getSwapchainExtent(),
+                        utils::Timer::getDeltaTime());
 
         std::shared_ptr<Model> lastModel = nullptr;
         std::shared_ptr<Material> lastMaterial = nullptr;
@@ -90,6 +90,7 @@ namespace iris::graphics{
         initDescriptorSets();
         initMaterials();
         initObjects();
+        initLights();
     }
 
     void Scene::initDescriptorSets() {
@@ -228,5 +229,13 @@ namespace iris::graphics{
         texturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
         texturedStar.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
         m_renderObjects.push_back(texturedStar);
+    }
+
+    void Scene::initLights() {
+        PointLight light(glm::vec3(1,1,1), glm::vec4(1,1,0,1));
+        PointLight light01(glm::vec3(-1,1,-1), glm::vec4(0,1,1,1));
+        m_sceneData.m_lights[0] = light.m_gpuLightData;
+        m_sceneData.m_lights[1] = light01.m_gpuLightData;
+        m_sceneData.m_numLights = 2;
     }
 }
