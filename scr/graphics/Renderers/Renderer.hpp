@@ -3,6 +3,7 @@
 
 #include "../Device.hpp"
 #include "../Swapchain.hpp"
+#include "../Objects.hpp"
 
 
 namespace iris::graphics{
@@ -15,8 +16,10 @@ namespace iris::graphics{
         Renderer &operator=(const Renderer &) = delete;
 
         virtual VkCommandBuffer beginFrame() = 0;
+        virtual void loadRenderer() = 0;
         virtual void endFrame(VkCommandBuffer cmd) = 0;
         virtual void postRender() = 0;
+        virtual void renderScene(std::vector<RenderObject> & renderObjects, GpuSceneData sceneData, Camera & camera) = 0;
 
         virtual void init() = 0;
 

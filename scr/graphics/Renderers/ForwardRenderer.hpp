@@ -4,6 +4,9 @@
 #include "Renderer.hpp"
 #include "../Initializers.hpp"
 #include "../Debugger.hpp"
+#include "../Descriptors.hpp"
+#include "../../utilities/Timer.hpp"
+
 
 
 namespace iris::graphics{
@@ -18,16 +21,29 @@ namespace iris::graphics{
         void init() override;
 
         VkCommandBuffer beginFrame() override;
+        void loadRenderer() override;
         void endFrame(VkCommandBuffer cmd) override;
         void postRender() override;
+        void renderScene(std::vector<RenderObject> & renderObjects, GpuSceneData sceneData, Camera & camera) override;
 
         VkRenderPass getRenderPass(){ return m_renderPass; }
     private:
-        VkRenderPass m_renderPass{};
-        void createRenderPass();
-
         void createCommandBuffers() override;
         void freeCommandBuffers() override;
+
+        std::unique_ptr<DescriptorPool> m_pGlobalPool{};
+
+        std::unique_ptr<DescriptorSetLayout> m_pGlobalSetLayout{};
+        std::unique_ptr<DescriptorSetLayout> m_pTexturedSetLayout{};
+
+        std::vector<VkDescriptorSet> m_sceneDescriptorSets{};
+        std::vector<AllocatedBuffer> m_uboSceneBuffers;
+
+        void initDescriptorSets();
+        void initMaterials();
+
+        VkRenderPass m_renderPass{};
+        void createRenderPass();
     };
 }
 

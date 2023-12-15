@@ -6,6 +6,7 @@ namespace iris::graphics {
     Engine::Engine() {
         loadModels();
         loadImages();
+        m_renderer.loadRenderer();
         m_scene.loadScene();
     }
 

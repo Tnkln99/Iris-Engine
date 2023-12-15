@@ -7,7 +7,6 @@
 #include <memory>
 
 namespace iris::graphics{
-
     struct Transform{
         glm::vec3 m_translation{};
         glm::vec3 m_scale{1.f, 1.f, 1.f};
@@ -69,6 +68,13 @@ namespace iris::graphics{
         }m_gpuLightData;
     };
 
+    struct GpuSceneData{
+        glm::mat4 m_projectionMatrix;
+        glm::mat4 m_viewMatrix;
+        glm::vec4 m_ambientLightColor; // w is intesity
+        int m_numLights;
+        PointLight::GpuPointLightData m_lights[10];
+    };
 }
 
 #endif //IRIS_OBJECTS_HPP
