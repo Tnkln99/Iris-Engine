@@ -234,8 +234,11 @@ namespace iris::graphics{
     void Scene::initLights() {
         PointLight light(glm::vec3(1,1,1), glm::vec4(1,1,0,1));
         PointLight light01(glm::vec3(-1,1,-1), glm::vec4(0,1,1,1));
-        m_sceneData.m_lights[0] = light.m_gpuLightData;
-        m_sceneData.m_lights[1] = light01.m_gpuLightData;
-        m_sceneData.m_numLights = 2;
+        m_PointLights.emplace_back(glm::vec3(1,1,1), glm::vec4(1,1,0,1));
+        m_PointLights.emplace_back(glm::vec3(-1,1,-1), glm::vec4(0,1,1,1));
+        for(int i = 0; i < m_PointLights.size(); i++){
+            m_sceneData.m_lights[i] = m_PointLights[i].m_gpuLightData;
+        }
+        m_sceneData.m_numLights = m_PointLights.size();
     }
 }

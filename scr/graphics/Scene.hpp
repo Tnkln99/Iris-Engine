@@ -38,6 +38,7 @@ namespace iris::graphics{
 
         Camera m_camera{};
         std::vector<RenderObject> m_renderObjects{};
+        std::vector<PointLight> m_PointLights{};
 
         // maybe to renderers
         void initDescriptorSets();
