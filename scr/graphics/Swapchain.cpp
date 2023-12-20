@@ -49,7 +49,6 @@ namespace iris::graphics{
 
     void Swapchain::createSwapchain() {
         SwapChainSupportDetails swapChainSupport = m_rDevice.getSwapChainSupport();
-
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.m_formats);
         VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.m_presentModes);
         VkExtent2D extent = chooseSwapExtent(swapChainSupport.m_capabilities);
@@ -101,6 +100,7 @@ namespace iris::graphics{
         // retrieve the handles.
         vkGetSwapchainImagesKHR(m_rDevice.getDevice(), m_swapchain, &imageCount, nullptr);
         m_swapchainImages.resize(imageCount);
+
         vkGetSwapchainImagesKHR(m_rDevice.getDevice(), m_swapchain, &imageCount, m_swapchainImages.data());
 
         m_swapchainImageFormat = surfaceFormat.format;
@@ -181,10 +181,8 @@ namespace iris::graphics{
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
         for (size_t i = 0; i < m_cMaxImagesOnFlight; i++) {
-            if (vkCreateSemaphore(m_rDevice.getDevice(), &semaphoreInfo, nullptr, &m_presentSemaphores[i]) !=
-                VK_SUCCESS ||
-                    vkCreateSemaphore(m_rDevice.getDevice(), &semaphoreInfo, nullptr, &m_renderSemaphores[i]) !=
-                    VK_SUCCESS ||
+            if (vkCreateSemaphore(m_rDevice.getDevice(), &semaphoreInfo, nullptr, &m_presentSemaphores[i]) != VK_SUCCESS ||
+                vkCreateSemaphore(m_rDevice.getDevice(), &semaphoreInfo, nullptr, &m_renderSemaphores[i]) != VK_SUCCESS ||
                 vkCreateFence(m_rDevice.getDevice(), &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create synchronization objects for a frame!");
             }
@@ -299,7 +297,8 @@ namespace iris::graphics{
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         vkResetFences(m_rDevice.getDevice(), 1, &m_inFlightFences[currentFrameIndex]);
-        if (vkQueueSubmit(m_rDevice.getGraphicsQueue(), 1, &submitInfo, m_inFlightFences[currentFrameIndex]) !=
+        if (vkQueueSubmit(m_rDevice.getGraphicsQueue(), 1, &submitInfo,
+                          m_inFlightFences[currentFrameIndex]) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to submit draw command buffer!");
         }

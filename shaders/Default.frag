@@ -16,7 +16,7 @@ layout(set = 0, binding = 0) uniform SceneBuffer{
     mat4 viewMatrix;
     vec4 ambientLightColor;
     int numLights;
-    PointLight pointLights[10];
+    PointLight pointLights[50];
 } sceneData;
 
 layout(push_constant) uniform Push{

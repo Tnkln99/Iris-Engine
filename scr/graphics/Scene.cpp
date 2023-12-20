@@ -1,9 +1,5 @@
 #include "Scene.hpp"
-#include "Initializers.hpp"
-#include "Debugger.hpp"
 #include "AssetsManager.hpp"
-
-#include <cassert>
 
 namespace iris::graphics{
 
@@ -17,6 +13,7 @@ namespace iris::graphics{
 
     Scene::~Scene() {
         m_renderObjects.clear();
+        m_PointLights.clear();
     }
 
     void Scene::update() {
@@ -58,8 +55,6 @@ namespace iris::graphics{
     }
 
     void Scene::initLights() {
-        PointLight light(glm::vec3(1,1,1), glm::vec4(1,1,0,1));
-        PointLight light01(glm::vec3(-1,1,-1), glm::vec4(0,1,1,1));
         m_PointLights.emplace_back(glm::vec3(1,1,1), glm::vec4(1,1,0,1));
         m_PointLights.emplace_back(glm::vec3(-1,1,-1), glm::vec4(0,1,1,1));
         for(int i = 0; i < m_PointLights.size(); i++){

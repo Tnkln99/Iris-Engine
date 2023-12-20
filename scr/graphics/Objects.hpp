@@ -31,7 +31,6 @@ namespace iris::graphics{
     private:
         glm::mat4 modelMatrix();
         glm::mat3 normalMatrix();
-
     };
 
     class Camera{
@@ -73,7 +72,7 @@ namespace iris::graphics{
         glm::mat4 m_viewMatrix;
         glm::vec4 m_ambientLightColor; // w is intesity
         int m_numLights;
-        PointLight::GpuPointLightData m_lights[10];
+        PointLight::GpuPointLightData m_lights[50];
     };
 }
 

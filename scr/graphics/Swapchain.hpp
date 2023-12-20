@@ -38,17 +38,20 @@ namespace iris::graphics{
 
         std::vector<VkFramebuffer> m_swapchainFramebuffers{};
 
+        // depth attachments
         std::vector<VkImage> m_depthImages;
         std::vector<VkImageView> m_depthImageViews;
         std::vector<VkDeviceMemory> m_depthImageMemories;
+        VkFormat m_swapChainDepthFormat;
 
+        // color attachments for forward rendering
         std::vector<VkImage> m_swapchainImages;
         std::vector<VkImageView> m_swapchainImageViews;
+        VkFormat m_swapchainImageFormat;
+
+        // color attachments for deferred rendering
 
         VkExtent2D m_windowExtent{};
-
-        VkFormat m_swapchainImageFormat;
-        VkFormat m_swapChainDepthFormat;
         VkExtent2D m_swapChainExtent{};
 
         std::vector<VkSemaphore> m_presentSemaphores;
