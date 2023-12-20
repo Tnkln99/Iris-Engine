@@ -4,6 +4,7 @@
 namespace iris::graphics{
 
     ForwardRenderer::ForwardRenderer(Device &device, Window& window) : Renderer(device, window) {
+        m_pSwapchain = std::make_unique<Swapchain>(device, window.getExtent());
     }
 
     void ForwardRenderer::init() {

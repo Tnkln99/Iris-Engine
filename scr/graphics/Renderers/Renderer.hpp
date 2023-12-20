@@ -1,7 +1,7 @@
 #ifndef IRIS_RENDERER_HPP
 #define IRIS_RENDERER_HPP
 
-#include "../Device.hpp"
+#include "../FrameBuffer.hpp"
 #include "../Swapchain.hpp"
 #include "../Objects.hpp"
 
