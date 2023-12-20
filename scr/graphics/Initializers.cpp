@@ -108,11 +108,11 @@ namespace iris::graphics{
     }
 
     VkImageViewCreateInfo
-    Initializers::createImageViewInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags) {
+    Initializers::createImageViewInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags, VkImageViewType  viewType) {
         VkImageViewCreateInfo viewInfo = {};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.image = image; // the image we are creating the view for
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // type of image
+        viewInfo.viewType = viewType; // type of image
         viewInfo.format = format; // format of the image data
         viewInfo.subresourceRange.aspectMask = aspectFlags; // which aspect of the image we are viewing
         viewInfo.subresourceRange.baseMipLevel = 0; // start mipmap level to view from

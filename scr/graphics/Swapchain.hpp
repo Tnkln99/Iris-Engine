@@ -50,6 +50,7 @@ namespace iris::graphics{
         VkFormat m_swapchainImageFormat;
 
         // color attachments for deferred rendering
+        // TODO
 
         VkExtent2D m_windowExtent{};
         VkExtent2D m_swapChainExtent{};

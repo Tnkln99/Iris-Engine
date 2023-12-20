@@ -25,7 +25,7 @@ namespace iris::graphics{
         [[nodiscard]] static VkRenderPassCreateInfo createRenderPassInfo(const std::vector<VkAttachmentDescription>& attachments,
                                                                          const std::vector<VkSubpassDescription>& subpasses,
                                                                          const std::vector<VkSubpassDependency>& dependencies);
-        [[nodiscard]] static VkImageViewCreateInfo createImageViewInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags) ;
+        [[nodiscard]] static VkImageViewCreateInfo createImageViewInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags, VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D) ;
         [[nodiscard]] static VkImageCreateInfo  createImageInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent);
         [[nodiscard]] static VkSamplerCreateInfo createSamplerInfo(VkFilter filters, VkSamplerAddressMode samplerAddressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT);
         [[nodiscard]] static VkFramebufferCreateInfo createFramebufferInfo(VkRenderPass renderPass, VkExtent2D extent, const std::vector<VkImageView>& attachments);
