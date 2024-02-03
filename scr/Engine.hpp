@@ -1,11 +1,11 @@
 #ifndef IRIS_ENGINE_HPP
 #define IRIS_ENGINE_HPP
 
-#include "Device.hpp"
-#include "Renderers/ForwardRenderer.hpp"
-#include "Scene.hpp"
+#include "graphics/Device.hpp"
+#include "graphics/Renderers/ForwardRenderer.hpp"
+#include "app/Scene.hpp"
 
-namespace iris::graphics {
+namespace iris {
     class Engine {
     public:
         Engine();
@@ -16,11 +16,11 @@ namespace iris::graphics {
 
         void run();
     private:
-        Window m_window{800, 600, "Iris Engine"};
-        Device m_device{m_window};
-        ForwardRenderer m_renderer{m_device, m_window};
+        graphics::Window m_window{800, 600, "Iris Engine"};
+        graphics::Device m_device{m_window};
+        graphics::ForwardRenderer m_renderer{m_device, m_window};
 
-        Scene m_scene{m_renderer};
+        app::Scene m_scene{m_renderer};
 
         void loadModels();
         void loadImages();

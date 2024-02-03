@@ -1,13 +1,15 @@
 #ifndef IRIS_SCENE_HPP
 #define IRIS_SCENE_HPP
 
-#include "Renderers/ForwardRenderer.hpp"
-#include "Pipeline.hpp"
-#include "Descriptors.hpp"
-#include "Objects.hpp"
+#include "../graphics/Renderers/ForwardRenderer.hpp"
+#include "../graphics/Pipeline.hpp"
+#include "../graphics/Descriptors.hpp"
+#include "../graphics/Objects.hpp"
+
+using namespace iris::graphics;
 
 
-namespace iris::graphics{
+namespace iris::app{
     class Scene {
     public:
         explicit Scene(ForwardRenderer& renderer);
@@ -20,7 +22,7 @@ namespace iris::graphics{
         ForwardRenderer& m_rRenderer;
 
         GpuSceneData m_sceneData{};
-        Camera m_camera{};
+        graphics::Camera m_camera{};
         std::vector<RenderObject> m_renderObjects{};
         std::vector<PointLight> m_PointLights{};
 

@@ -1,7 +1,7 @@
 #include "Engine.hpp"
-#include "AssetsManager.hpp"
+#include "graphics/AssetsManager.hpp"
 
-namespace iris::graphics {
+namespace iris {
 
     Engine::Engine() {
         loadModels();

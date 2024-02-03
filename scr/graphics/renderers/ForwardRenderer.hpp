@@ -27,6 +27,9 @@ namespace iris::graphics{
         void renderScene(std::vector<RenderObject> & renderObjects, GpuSceneData sceneData, Camera & camera) override;
 
         VkRenderPass getRenderPass(){ return m_renderPass; }
+
+        void loadTexturesOfMaterial(std::string matName, std::string ambientTex,
+                                    std::string diffuseTex, std::string specularTex) override;
     private:
         void createCommandBuffers() override;
         void freeCommandBuffers() override;

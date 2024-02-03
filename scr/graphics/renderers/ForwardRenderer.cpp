@@ -352,10 +352,14 @@ namespace iris::graphics{
                 texturedPipelineConfigInfo);
 
         AssetsManager::loadMaterial(m_rDevice, "DefaultMeshTextured", texturedPipeline, texturedPipelineLayout);
-        auto mat = AssetsManager::getMaterial("DefaultMeshTextured");
-        mat->setTexture(AssetsManager::getTexture("StarAmbient"),
-                        AssetsManager::getTexture("StarDiffuse"),
-                        AssetsManager::getTexture("StarSpecular"),
+    }
+
+    void ForwardRenderer::loadTexturesOfMaterial(std::string matName, std::string ambientTex,
+                                                 std::string diffuseTex, std::string specularTex) {
+        auto mat = AssetsManager::getMaterial(matName);
+        mat->setTexture(AssetsManager::getTexture(ambientTex),
+                        AssetsManager::getTexture(diffuseTex),
+                        AssetsManager::getTexture(specularTex),
                         *m_pGlobalPool, *m_pTexturedSetLayout);
     }
 

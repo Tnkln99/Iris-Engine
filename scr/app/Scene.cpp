@@ -1,11 +1,11 @@
 #include "Scene.hpp"
-#include "Initializers.hpp"
-#include "Debugger.hpp"
-#include "AssetsManager.hpp"
+#include "../graphics/Initializers.hpp"
+#include "../graphics/Debugger.hpp"
+#include "../graphics/AssetsManager.hpp"
 
 #include <cassert>
 
-namespace iris::graphics{
+namespace iris::app{
 
     Scene::Scene(ForwardRenderer &renderer) : m_rRenderer{renderer} {
         m_rRenderer.init();
@@ -47,6 +47,8 @@ namespace iris::graphics{
         star.m_transform.m_translation = {-0.3f, 0.2f, 0.0f};
         star.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
         m_renderObjects.push_back(star);
+
+        m_rRenderer.loadTexturesOfMaterial("DefaultMeshTextured", "StarAmbient", "StarDiffuse", "StarSpecular");
 
         RenderObject texturedStar{};
         texturedStar.m_pModel = AssetsManager::getModel("Star");
