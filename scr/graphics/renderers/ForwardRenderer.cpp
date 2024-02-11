@@ -167,6 +167,7 @@ namespace iris::graphics{
         m_frameCount++;
     }
 
+    // todo: last material and last model tracking to decrease the number of pipeline binds
     void ForwardRenderer::renderScene(std::vector<RenderObject> & renderObjects, GpuSceneData sceneData,
                                       Camera & camera) {
         VkCommandBuffer cmd = beginFrame();
@@ -181,32 +182,28 @@ namespace iris::graphics{
         camera.update(getSwapchainExtent(),
                         utils::Timer::getDeltaTime());
 
-        std::shared_ptr<Model> lastModel = nullptr;
-        std::shared_ptr<Material> lastMaterial = nullptr;
         for(auto & renderObject : renderObjects){
             renderObject.updateInfo();
-            auto material = renderObject.m_pMaterial;
-            if(lastMaterial != material){
-                material->getPipeline()->bind(cmd);
+            auto materialInst = renderObject.m_pMaterial;
+            auto material = renderObject.m_pMaterial->m_pMaterial;
 
-                vkCmdBindDescriptorSets(
-                        cmd,
-                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        material->getPipeLineLayout(),
-                        0,
-                        1,
-                        &m_sceneDescriptorSets[getCurrentFrame()],
-                        0,
-                        nullptr
-                );
+            material->getPipeline()->bind(cmd);
 
-                if(material->getTextureSet() != VK_NULL_HANDLE){
-                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                            material->getPipeLineLayout(), 1, 1,
-                                            &material->getTextureSet(), 0, nullptr);
-                }
+            vkCmdBindDescriptorSets(
+                    cmd,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    material->getPipeLineLayout(),
+                    0,
+                    1,
+                    &m_sceneDescriptorSets[getCurrentFrame()],
+                    0,
+                    nullptr
+            );
 
-                lastMaterial = material;
+            if(materialInst->m_textureSet != VK_NULL_HANDLE){
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        material->getPipeLineLayout(), 1, 1,
+                                        &materialInst->m_textureSet, 0, nullptr);
             }
 
 
@@ -218,12 +215,36 @@ namespace iris::graphics{
                     sizeof(RenderObject::GpuObjectData),
                     &renderObject.m_gpuObjectData);
 
-
-            if(lastModel != renderObject.m_pModel){
-                renderObject.m_pModel->bind(cmd);
-                lastModel = renderObject.m_pModel;
-            }
+            renderObject.m_pModel->bind(cmd);
             renderObject.m_pModel->draw(cmd);
+
+
+            if (renderObject.m_pBoundingBox)
+            {
+                AssetsManager::getMaterial("DebugBox")->getPipeline()->bind(cmd);
+                vkCmdBindDescriptorSets(
+                        cmd,
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        AssetsManager::getMaterial("DebugBox")->getPipeLineLayout(),
+                        0,
+                        1,
+                        &m_sceneDescriptorSets[getCurrentFrame()],
+                        0,
+                        nullptr
+                );
+
+                vkCmdPushConstants(
+                        cmd,
+                        AssetsManager::getMaterial("DebugBox")->getPipeLineLayout(),
+                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                        0,
+                        sizeof(RenderObject::GpuObjectData),
+                        &renderObject.m_gpuObjectData);
+
+                renderObject.m_pBoundingBox->bind(cmd);
+                renderObject.m_pBoundingBox->draw(cmd);
+            }
+
         }
 
         endFrame(cmd);
@@ -336,7 +357,7 @@ namespace iris::graphics{
                                                  &texturedPipelineLayoutCreateInfo,
                                                  nullptr, &texturedPipelineLayout),"Failed to create pipeline layout");
 
-        assert(defaultPipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+        assert(texturedPipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
         graphics::PipelineConfigInfo texturedPipelineConfigInfo{};
 
@@ -352,15 +373,55 @@ namespace iris::graphics{
                 texturedPipelineConfigInfo);
 
         AssetsManager::loadMaterial(m_rDevice, "DefaultMeshTextured", texturedPipeline, texturedPipelineLayout);
+
+
+
+        VkPipelineLayoutCreateInfo debugBoxPipelineLayoutCreateInfo = Initializers::createPipelineLayoutInfo();
+
+        debugBoxPipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+        debugBoxPipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
+        debugBoxPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+        debugBoxPipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+
+        VkPipelineLayout debugBoxPipelineLayout{};
+
+        Debugger::vkCheck(vkCreatePipelineLayout(m_rDevice.getDevice(),
+                                                 &debugBoxPipelineLayoutCreateInfo,
+                                                 nullptr, &debugBoxPipelineLayout),"Failed to create pipeline layout");
+
+        assert(debugBoxPipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+
+        graphics::PipelineConfigInfo debugBoxPipelineConfigInfo{};
+
+
+        graphics::Pipeline::defaultPipelineConfig(debugBoxPipelineConfigInfo);
+        debugBoxPipelineConfigInfo.m_rasterizationInfo.polygonMode = VK_POLYGON_MODE_LINE;
+
+        debugBoxPipelineConfigInfo.m_renderPass = getRenderPass();
+        debugBoxPipelineConfigInfo.m_pipelineLayout = debugBoxPipelineLayout;
+
+        auto debugBoxPipeline = std::make_shared<Pipeline>(
+                m_rDevice,
+                "../shaders/DebugBox.vert.spv",
+                "../shaders/DebugBox.frag.spv",
+                debugBoxPipelineConfigInfo);
+
+        AssetsManager::loadMaterial(m_rDevice, "DebugBox", debugBoxPipeline, debugBoxPipelineLayout);
     }
 
-    void ForwardRenderer::loadTexturesOfMaterial(std::string matName, std::string ambientTex,
-                                                 std::string diffuseTex, std::string specularTex) {
+    std::shared_ptr<Material::MaterialInstance> ForwardRenderer::createMaterialInstance(std::string matName, std::string ambientTex, std::string diffuseTex,
+                                                 std::string specularTex) {
         auto mat = AssetsManager::getMaterial(matName);
-        mat->setTexture(AssetsManager::getTexture(ambientTex),
-                        AssetsManager::getTexture(diffuseTex),
-                        AssetsManager::getTexture(specularTex),
-                        *m_pGlobalPool, *m_pTexturedSetLayout);
+        return std::make_shared<Material::MaterialInstance>(mat,
+                                                                   AssetsManager::getTexture(ambientTex),
+                                                                   AssetsManager::getTexture(diffuseTex),
+                                                                   AssetsManager::getTexture(specularTex),
+                                                                   *m_pGlobalPool, *m_pTexturedSetLayout);
+    }
+
+    std::shared_ptr<Material::MaterialInstance> ForwardRenderer::createMaterialInstance(std::string matName) {
+        auto mat = AssetsManager::getMaterial(matName);
+        return std::make_shared<Material::MaterialInstance>(mat);
     }
 
 }

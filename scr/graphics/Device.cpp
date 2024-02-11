@@ -111,6 +111,7 @@ namespace iris::graphics{
         }
 
         VkPhysicalDeviceFeatures deviceFeatures{}; // used to specify features we will use
+        deviceFeatures.fillModeNonSolid = VK_TRUE;
         VkDeviceCreateInfo createInfo = Initializers::createDeviceInfo(queueCreateInfos,
                                                                        m_cDeviceExtensions,
                                                                        m_cValidationLayers, deviceFeatures,

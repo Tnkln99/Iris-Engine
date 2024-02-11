@@ -5,6 +5,7 @@
 namespace iris::graphics{
     std::unordered_map<std::string, std::shared_ptr<Model>> AssetsManager::m_sModels = std::unordered_map<std::string, std::shared_ptr<Model>>{};
     std::unordered_map<std::string, std::shared_ptr<Material>> AssetsManager::m_sMaterials = std::unordered_map<std::string, std::shared_ptr<Material>>{};
+    std::unordered_map<std::string, std::shared_ptr<Material::MaterialInstance>> AssetsManager::m_sMaterialInstances = std::unordered_map<std::string, std::shared_ptr<Material::MaterialInstance>>{};
     std::unordered_map<std::string, std::shared_ptr<Texture>> AssetsManager::m_sTextures = std::unordered_map<std::string, std::shared_ptr<Texture>>{};
 
     void AssetsManager::clear(Device& device) {
@@ -20,6 +21,8 @@ namespace iris::graphics{
             device.destroyImage(texture.second->m_allocatedImage);
         }
         m_sTextures.clear();
+
+        m_sMaterialInstances.clear();
     }
 
     void AssetsManager::loadModel(Device& device, const std::string& name, const std::string& path){
@@ -40,13 +43,12 @@ namespace iris::graphics{
         return m_sModels[name];
     }
 
-    void AssetsManager::loadMaterial(Device& device, const std::string &name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout,
-                                     VkDescriptorSet texture) {
+    void AssetsManager::loadMaterial(Device& device, const std::string &name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout) {
         if(m_sMaterials.find(name) != m_sMaterials.end()){
             std::cout << "Material " << name << " already loaded!" << std::endl;
             return;
         }
-        m_sMaterials[name] = std::make_shared<Material>(device, name, pipeline, layout, texture);
+        m_sMaterials[name] = std::make_shared<Material>(device, name, pipeline, layout);
     }
 
     std::shared_ptr<Material> AssetsManager::getMaterial(const std::string &name) {
@@ -56,6 +58,20 @@ namespace iris::graphics{
         }
 
         return m_sMaterials[name];
+    }
+
+    void AssetsManager::storeMaterialInstance(const std::string &name,
+                                              const std::shared_ptr<Material::MaterialInstance> &instance) {
+        m_sMaterialInstances[name] = instance;
+    }
+
+    std::shared_ptr<Material::MaterialInstance> AssetsManager::getMaterialInstance(const std::string &name) {
+        if(m_sMaterialInstances.find(name) == m_sMaterialInstances.end()){
+            std::cout << "Material Instance " << name << " does not exists" << std::endl;
+            return nullptr;
+        }
+
+        return m_sMaterialInstances[name];
     }
 
     void AssetsManager::loadTexture(Device &device, const std::string &name, const std::string &path) {

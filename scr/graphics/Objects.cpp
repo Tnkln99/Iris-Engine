@@ -67,7 +67,7 @@ namespace iris::graphics{
     ////////////////////////////////////////////////////////////////////////////
 
     Camera::Camera() {
-        m_transform.m_translation = {1, 2, 1};
+        m_transform.m_translation = {0, 0.5f, 3};
     }
 
     void Camera::update(VkExtent2D windowExtent, float dt) {

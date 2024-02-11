@@ -28,8 +28,9 @@ namespace iris::graphics{
 
         VkRenderPass getRenderPass(){ return m_renderPass; }
 
-        void loadTexturesOfMaterial(std::string matName, std::string ambientTex,
-                                    std::string diffuseTex, std::string specularTex) override;
+        std::shared_ptr<Material::MaterialInstance> createMaterialInstance(std::string matName, std::string ambientTex,
+                                    std::string diffuseTex, std::string specularTex);
+        std::shared_ptr<Material::MaterialInstance> createMaterialInstance(std::string matName);
     private:
         void createCommandBuffers() override;
         void freeCommandBuffers() override;

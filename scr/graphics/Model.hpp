@@ -26,6 +26,9 @@ namespace iris::graphics{
 
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+            Vertex() = default;
+            Vertex(glm::vec3 pos, glm::vec3 col, glm::vec3 norm, glm::vec2 tex)
+                    : m_position(pos), m_color(col), m_normal(norm), m_uv(tex) {}
 
             bool operator==(const Vertex& other) const
             {
@@ -41,6 +44,7 @@ namespace iris::graphics{
         };
 
         Model(Device& device, const Builder& builder);
+        Model(Device& device, Model& model);
         ~Model();
 
         Model(const Model&) = delete;
@@ -50,11 +54,14 @@ namespace iris::graphics{
 
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);
+        std::vector<Vertex> m_vertices{};
+        std::vector<uint32_t> m_indices{};
+        Device& m_rDevice;
     private:
+        std::vector<Vertex> createDebugBoxVertices(Model& model);
         void createVertexBuffers(const std::vector<Vertex>& vertices);
         void createIndexBuffers(const std::vector<uint32_t>& indices);
 
-        Device& m_rDevice;
 
         AllocatedBuffer m_vertexBuffer{};
         uint32_t m_vertexCount{};

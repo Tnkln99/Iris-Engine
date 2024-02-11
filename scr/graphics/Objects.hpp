@@ -5,6 +5,7 @@
 #include "Material.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace iris::graphics{
     struct Transform{
@@ -21,12 +22,19 @@ namespace iris::graphics{
         } m_gpuObjectData;
 
         std::shared_ptr<Model> m_pModel{};
-        std::shared_ptr<Material> m_pMaterial{};
+        std::shared_ptr<Model> m_pBoundingBox{};
+        std::shared_ptr<Material::MaterialInstance> m_pMaterial{};
         Transform m_transform{};
 
         void updateInfo(){
             m_gpuObjectData.m_modelMatrix = modelMatrix();
             m_gpuObjectData.m_normalMatrix = normalMatrix();
+        }
+
+        std::shared_ptr<Model> setModel(std::shared_ptr<Model> model){
+            m_pModel = std::move(model);
+            m_pBoundingBox = std::make_shared<Model>(m_pModel->m_rDevice, *m_pModel);
+            return m_pModel;
         }
     private:
         glm::mat4 modelMatrix();

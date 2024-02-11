@@ -34,29 +34,33 @@ namespace iris::app{
     }
 
     void Scene::initObjects() {
-        RenderObject plane{};
-        plane.m_pModel = AssetsManager::getModel("Plane");
-        plane.m_pMaterial = AssetsManager::getMaterial("DefaultMeshNonTextured");
-        plane.m_transform.m_translation = {0.0f, 0.0f, 0.0f};
-        plane.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        m_renderObjects.push_back(plane);
+        AssetsManager::storeMaterialInstance("RedColor", m_rRenderer.createMaterialInstance("DefaultMeshTextured", "RedColor", "RedColor", "RedColor"));
+        AssetsManager::storeMaterialInstance("StarTextured", m_rRenderer.createMaterialInstance("DefaultMeshTextured", "StarAmbient", "StarDiffuse", "StarSpecular"));
+        AssetsManager::storeMaterialInstance("NonTextured", m_rRenderer.createMaterialInstance("DefaultMeshNonTextured"));
 
-        RenderObject star{};
-        star.m_pModel = AssetsManager::getModel("Star");
-        star.m_pMaterial = AssetsManager::getMaterial("DefaultMeshNonTextured");
-        star.m_transform.m_translation = {-0.3f, 0.2f, 0.0f};
-        star.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        m_renderObjects.push_back(star);
+        RenderObject texturedStar01{};
+        texturedStar01.m_pModel = texturedStar01.setModel(AssetsManager::getModel("Star"));
+        texturedStar01.m_pMaterial = AssetsManager::getMaterialInstance("RedColor");
+        texturedStar01.m_transform.m_translation = {-0.3f, 0.2f, 0.0f};
+        texturedStar01.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        m_renderObjects.push_back(texturedStar01);
 
-        m_rRenderer.loadTexturesOfMaterial("DefaultMeshTextured", "StarAmbient", "StarDiffuse", "StarSpecular");
 
-        RenderObject texturedStar{};
-        texturedStar.m_pModel = AssetsManager::getModel("Star");
-        texturedStar.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
-        texturedStar.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
-        texturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        texturedStar.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
-        m_renderObjects.push_back(texturedStar);
+        RenderObject texturedStar02{};
+        texturedStar02.m_pModel = texturedStar02.setModel(AssetsManager::getModel("Star"));
+        texturedStar02.m_pMaterial =  AssetsManager::getMaterialInstance("StarTextured");
+        texturedStar02.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
+        texturedStar02.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        texturedStar02.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
+        m_renderObjects.push_back(texturedStar02);
+
+        RenderObject nonTexturedStar{};
+        nonTexturedStar.m_pModel = nonTexturedStar.setModel(AssetsManager::getModel("Star"));
+        nonTexturedStar.m_pMaterial =  AssetsManager::getMaterialInstance("NonTextured");
+        nonTexturedStar.m_transform.m_translation = {0.0f, 0.2f, 0.6f};
+        nonTexturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        nonTexturedStar.m_transform.m_rotation = {90.0f, 0.0f, 0.0f};
+        m_renderObjects.push_back(nonTexturedStar);
     }
 
     void Scene::initLights() {

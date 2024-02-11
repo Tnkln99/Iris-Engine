@@ -27,13 +27,15 @@ namespace iris {
     }
 
     void Engine::loadModels() {
-        AssetsManager::loadModel(m_device, "Star", "../assets/models/Star/Star.obj");
-        AssetsManager::loadModel(m_device, "Plane", "../assets/models/Plane/Plane.obj");
+        AssetsManager::loadModel(m_device, "Star", "../assets/star/Star.obj");
+        AssetsManager::loadModel(m_device, "Plane", "../assets/plane/Plane.obj");
+        AssetsManager::loadModel(m_device, "Square", "../assets/Square.obj");
     }
 
     void Engine::loadImages() {
-        AssetsManager::loadTexture(m_device, "StarAmbient", "../assets/models/Star/Ambient.png");
-        AssetsManager::loadTexture(m_device, "StarDiffuse", "../assets/models/Star/Diffuse.png");
-        AssetsManager::loadTexture(m_device, "StarSpecular", "../assets/models/Star/Specular.png");
+        AssetsManager::loadTexture(m_device, "StarAmbient", "../assets/star/Ambient.png");
+        AssetsManager::loadTexture(m_device, "StarDiffuse", "../assets/star/Diffuse.png");
+        AssetsManager::loadTexture(m_device, "StarSpecular", "../assets/star/Specular.png");
+        AssetsManager::loadTexture(m_device, "RedColor", "../assets/Red.jpg");
     }
 }

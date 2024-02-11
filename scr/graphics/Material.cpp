@@ -9,9 +9,8 @@ namespace iris::graphics{
     Material::Material(Device& device,
                        const std::string& name,
                        std::shared_ptr<Pipeline> pipeline,
-                       VkPipelineLayout layout, VkDescriptorSet texture) : m_rDevice{device} {
+                       VkPipelineLayout layout) : m_rDevice{device} {
         m_name = name;
-        m_textureSet = texture;
         m_pipeline = std::move(pipeline);
         m_pipeLineLayout = layout;
 
@@ -24,30 +23,30 @@ namespace iris::graphics{
         vkDestroySampler(m_rDevice.getDevice(), m_sampler, nullptr);
     }
 
-    void Material::setTexture(const std::shared_ptr<Texture>& ambientTexture,
-                              const std::shared_ptr<Texture>& diffuseTexture,
-                              const std::shared_ptr<Texture>& specularTexture,
-                              const DescriptorPool &pool, const DescriptorSetLayout &layout) {
+    Material::MaterialInstance::MaterialInstance(const std::shared_ptr<Material> &material,
+                                                 const std::shared_ptr<Texture>& ambientTexture,
+                                                 const std::shared_ptr<Texture>& diffuseTexture,
+                                                 const std::shared_ptr<Texture>& specularTexture,
+                                                 const DescriptorPool &pool,
+                                                 const DescriptorSetLayout &layout) {
+        m_pMaterial = material;
+
 
         pool.allocateDescriptor(layout.getDescriptorSetLayout(),
                                 m_textureSet);
 
-        m_pAmbientTexture = ambientTexture;
-        m_pDiffuseTexture = diffuseTexture;
-        m_pSpecularTexture = specularTexture;
-
         VkDescriptorImageInfo ambientImageBufferInfo;
-        ambientImageBufferInfo.sampler = m_sampler;
+        ambientImageBufferInfo.sampler = m_pMaterial->m_sampler;
         ambientImageBufferInfo.imageView = ambientTexture->m_imageView;
         ambientImageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkDescriptorImageInfo diffuseImageBufferInfo;
-        diffuseImageBufferInfo.sampler = m_sampler;
+        diffuseImageBufferInfo.sampler = m_pMaterial->m_sampler;
         diffuseImageBufferInfo.imageView = diffuseTexture->m_imageView;
         diffuseImageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkDescriptorImageInfo specularImageBufferInfo;
-        specularImageBufferInfo.sampler = m_sampler;
+        specularImageBufferInfo.sampler = m_pMaterial->m_sampler;
         specularImageBufferInfo.imageView = specularTexture->m_imageView;
         specularImageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -57,7 +56,10 @@ namespace iris::graphics{
 
         std::vector<VkWriteDescriptorSet> descriptorWrites = {texture1, texture2, texture3};
 
-        vkUpdateDescriptorSets(m_rDevice.getDevice(), 3, descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(m_pMaterial->m_rDevice.getDevice(), 3, descriptorWrites.data(), 0, nullptr);
     }
 
+    Material::MaterialInstance::MaterialInstance(const std::shared_ptr<Material> &material) {
+        m_pMaterial = material;
+    }
 }

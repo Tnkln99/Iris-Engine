@@ -17,8 +17,11 @@ namespace iris::graphics{
         static void loadModel(Device& device, const std::string& name, const std::string& path);
         static std::shared_ptr<Model> getModel(const std::string& name);
 
-        static void loadMaterial(Device& device, const std::string& name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout, VkDescriptorSet texture = VK_NULL_HANDLE);
+        static void loadMaterial(Device& device, const std::string& name, const std::shared_ptr<Pipeline>& pipeline, VkPipelineLayout layout);
         static std::shared_ptr<Material> getMaterial(const std::string& name);
+
+        static void storeMaterialInstance(const std::string& name, const std::shared_ptr<Material::MaterialInstance>& instance);
+        static std::shared_ptr<Material::MaterialInstance> getMaterialInstance(const std::string& name);
 
         static void loadTexture(Device& device, const std::string& name, const std::string& path);
         static std::shared_ptr<Texture> getTexture(const std::string& name);
@@ -27,6 +30,7 @@ namespace iris::graphics{
     private:
         static std::unordered_map<std::string, std::shared_ptr<Model>> m_sModels;
         static std::unordered_map<std::string, std::shared_ptr<Material>> m_sMaterials;
+        static std::unordered_map<std::string, std::shared_ptr<Material::MaterialInstance>> m_sMaterialInstances;
         static std::unordered_map<std::string, std::shared_ptr<Texture>> m_sTextures;
     };
 }

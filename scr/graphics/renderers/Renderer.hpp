@@ -26,9 +26,6 @@ namespace iris::graphics{
         int getMaximumFramesInFlight(){ return m_pSwapchain->m_cMaxImagesOnFlight; }
         int getCurrentFrame(){ return m_frameCount % m_pSwapchain->m_cMaxImagesOnFlight;}
         VkExtent2D getSwapchainExtent(){ return m_pSwapchain->getExtent(); }
-
-        virtual void loadTexturesOfMaterial(std::string matName, std::string ambientTex,
-                                            std::string diffuseTex, std::string specularTex) = 0;
     protected:
         Device& m_rDevice;
         Window& m_rWindow;
