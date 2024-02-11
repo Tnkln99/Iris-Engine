@@ -87,23 +87,6 @@ namespace iris::graphics{
         createIndexBuffers(builder.m_indices);
     }
 
-    Model::Model(Device& device, Model &model) : m_rDevice{device}{
-        std::vector<Vertex> m_vertices = createDebugBoxVertices(model);
-        std::vector<uint32_t> m_indices = {
-                // Bottom face
-                0, 1, 2, 2, 3, 0,
-                // Top face
-                4, 5, 6, 6, 7, 4,
-                // Sides
-                0, 4, 5, 5, 1, 0,
-                1, 5, 6, 6, 2, 1,
-                2, 6, 7, 7, 3, 2,
-                3, 7, 4, 4, 0, 3
-        };
-        createVertexBuffers(m_vertices);
-        createIndexBuffers(m_indices);
-    }
-
     Model::~Model(){
         m_rDevice.destroyBuffer(m_vertexBuffer);
         if (m_hasIndexBuffer) {
@@ -116,41 +99,6 @@ namespace iris::graphics{
         Builder builder{};
         builder.loadModel(filePath);
         return std::make_unique<Model>(device, builder);
-    }
-
-    std::vector<Model::Vertex> Model::createDebugBoxVertices(Model &model) {
-        if (model.m_vertices.empty()) return {}; // Handle empty vertex list
-
-        // Initialize min and max with the first vertex position
-        glm::vec3 min = model.m_vertices[0].m_position, max = model.m_vertices[0].m_position;
-
-        // Find min and max points
-        for (const auto& vertex : model.m_vertices) {
-            min.x = std::min(min.x, vertex.m_position.x);
-            min.y = std::min(min.y, vertex.m_position.y);
-            min.z = std::min(min.z, vertex.m_position.z);
-
-            max.x = std::max(max.x, vertex.m_position.x);
-            max.y = std::max(max.y, vertex.m_position.y);
-            max.z = std::max(max.z, vertex.m_position.z);
-        }
-
-        // Define vertices for the debug box
-        std::vector<Vertex> boxVertices = {
-                // Bottom face
-                Vertex(glm::vec3(min.x, min.y, min.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)),
-                Vertex(glm::vec3(max.x, min.y, min.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)),
-                Vertex(glm::vec3(max.x, max.y, min.z), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)),
-                Vertex(glm::vec3(min.x, max.y, min.z), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)),
-
-                // Top face
-                Vertex(glm::vec3(min.x, min.y, max.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
-                Vertex(glm::vec3(max.x, min.y, max.z), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
-                Vertex(glm::vec3(max.x, max.y, max.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-                Vertex(glm::vec3(min.x, max.y, max.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-        };
-
-        return boxVertices;
     }
 
     void Model::bind(VkCommandBuffer commandBuffer)
@@ -204,7 +152,6 @@ namespace iris::graphics{
     void Model::createIndexBuffers(const std::vector<uint32_t>& indices)
     {
         m_indexCount = static_cast<uint32_t>(indices.size());
-        std::cout<< "Index count: " << m_indexCount << std::endl;
         m_hasIndexBuffer = m_indexCount > 0;
 
         if (!m_hasIndexBuffer) {

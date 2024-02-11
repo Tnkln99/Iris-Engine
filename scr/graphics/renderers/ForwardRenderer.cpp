@@ -184,8 +184,8 @@ namespace iris::graphics{
 
         for(auto & renderObject : renderObjects){
             renderObject.updateInfo();
-            auto materialInst = renderObject.m_pMaterial;
-            auto material = renderObject.m_pMaterial->m_pMaterial;
+            auto materialInst = renderObject.m_pMaterialInstance;
+            auto material = renderObject.m_pMaterialInstance->m_pMaterial;
 
             material->getPipeline()->bind(cmd);
 
@@ -215,11 +215,11 @@ namespace iris::graphics{
                     sizeof(RenderObject::GpuObjectData),
                     &renderObject.m_gpuObjectData);
 
-            renderObject.m_pModel->bind(cmd);
-            renderObject.m_pModel->draw(cmd);
+            renderObject.getModel()->bind(cmd);
+            renderObject.getModel()->draw(cmd);
 
 
-            if (renderObject.m_pBoundingBox)
+            if (renderObject.getBoundingBox().m_pDebugModel != nullptr && renderObject.getBoundingBox().m_show)
             {
                 AssetsManager::getMaterial("DebugBox")->getPipeline()->bind(cmd);
                 vkCmdBindDescriptorSets(
@@ -241,8 +241,8 @@ namespace iris::graphics{
                         sizeof(RenderObject::GpuObjectData),
                         &renderObject.m_gpuObjectData);
 
-                renderObject.m_pBoundingBox->bind(cmd);
-                renderObject.m_pBoundingBox->draw(cmd);
+                renderObject.getBoundingBox().m_pDebugModel->bind(cmd);
+                renderObject.getBoundingBox().m_pDebugModel->draw(cmd);
             }
 
         }

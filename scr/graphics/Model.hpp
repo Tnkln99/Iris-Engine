@@ -44,7 +44,6 @@ namespace iris::graphics{
         };
 
         Model(Device& device, const Builder& builder);
-        Model(Device& device, Model& model);
         ~Model();
 
         Model(const Model&) = delete;
@@ -58,7 +57,6 @@ namespace iris::graphics{
         std::vector<uint32_t> m_indices{};
         Device& m_rDevice;
     private:
-        std::vector<Vertex> createDebugBoxVertices(Model& model);
         void createVertexBuffers(const std::vector<Vertex>& vertices);
         void createIndexBuffers(const std::vector<uint32_t>& indices);
 
