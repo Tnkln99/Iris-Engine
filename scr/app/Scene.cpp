@@ -1,13 +1,11 @@
 #include "Scene.hpp"
-#include "../graphics/Initializers.hpp"
-#include "../graphics/Debugger.hpp"
 #include "../graphics/AssetsManager.hpp"
 
 #include <cassert>
 
 namespace iris::app{
 
-    Scene::Scene(ForwardRenderer &renderer) : m_rRenderer{renderer} {
+    Scene::Scene(ForwardRenderer &renderer, Window& window) : m_rRenderer{renderer}, m_rWindow{window} {
         m_rRenderer.init();
         utils::Timer::init();
 
@@ -20,7 +18,26 @@ namespace iris::app{
     }
 
     void Scene::update() {
-
+        m_camera.update(utils::Timer::getDeltaTime());
+        double mouseX = Window::m_sMouseInfo.m_xPos;
+        double mouseY = Window::m_sMouseInfo.m_yPos;
+        auto rayDir = glm::normalize(glm::vec3(m_camera.getCameraRay(mouseX, mouseY)));
+        std::cout << "rayDir: " << rayDir.x << " " << rayDir.y << " " << rayDir.z << std::endl;
+        for(auto & renderObject : m_renderObjects){
+            renderObject.updateInfo();
+            renderObject.getBoundingBox().update(utils::Timer::getDeltaTime(), renderObject.modelMatrix());
+            if ( renderObject.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir)){
+                renderObject.getBoundingBox().m_show = true;
+                if(Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame){
+                    std::cout << "Clicked on object" << std::endl;
+                    renderObject.m_pMaterialInstance = AssetsManager::getMaterialInstance("StarTextured");
+                }
+            }
+            else{
+                renderObject.getBoundingBox().m_show = false;
+            }
+        }
+        Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame = false;
     }
 
     void Scene::draw() {
@@ -36,41 +53,18 @@ namespace iris::app{
     void Scene::initObjects() {
         AssetsManager::storeMaterialInstance("RedColor", m_rRenderer.createMaterialInstance("DefaultMeshTextured", "RedColor", "RedColor", "RedColor"));
         AssetsManager::storeMaterialInstance("StarTextured", m_rRenderer.createMaterialInstance("DefaultMeshTextured", "StarAmbient", "StarDiffuse", "StarSpecular"));
+        AssetsManager::storeMaterialInstance("MI_Frame", m_rRenderer.createMaterialInstance("DefaultMeshTextured", "T_Frame", "T_Frame", "T_Frame"));
         AssetsManager::storeMaterialInstance("NonTextured", m_rRenderer.createMaterialInstance("DefaultMeshNonTextured"));
 
-        RenderObject texturedStar01{};
-        texturedStar01.setModel(AssetsManager::getModel("Star"));
-        texturedStar01.m_pMaterialInstance = AssetsManager::getMaterialInstance("RedColor");
-        texturedStar01.m_transform.m_translation = {-0.3f, 0.2f, 0.0f};
-        texturedStar01.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        m_renderObjects.push_back(texturedStar01);
-
-
-        RenderObject texturedStar02{};
-        texturedStar02.setModel(AssetsManager::getModel("Star"));
-        texturedStar02.m_pMaterialInstance =  AssetsManager::getMaterialInstance("StarTextured");
-        texturedStar02.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
-        texturedStar02.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        texturedStar02.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
-        m_renderObjects.push_back(texturedStar02);
-
-        RenderObject nonTexturedStar{};
-        nonTexturedStar.setModel(AssetsManager::getModel("Star"));
-        nonTexturedStar.m_pMaterialInstance =  AssetsManager::getMaterialInstance("NonTextured");
-        nonTexturedStar.m_transform.m_translation = {0.0f, 0.2f, 0.6f};
-        nonTexturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        nonTexturedStar.m_transform.m_rotation = {90.0f, 180.0f, -45.0f};
-        m_renderObjects.push_back(nonTexturedStar);
-        float xOffset = -1.2f;
+        float xOffset = -6.0f;
         for(int i = 0; i < 9; i++){
             RenderObject square{};
             square.setModel(AssetsManager::getModel("Square"));
-            square.m_pMaterialInstance =  AssetsManager::getMaterialInstance("NonTextured");
-            square.m_transform.m_translation = {xOffset, 0.8f, 0.0f};
-            square.m_transform.m_scale = {0.1f, 0.1f, 0.1f};
-            square.m_transform.m_rotation = {0.0f, 45.0f, 90.0f};
+            square.m_pMaterialInstance = AssetsManager::getMaterialInstance("MI_Frame");
+            square.m_transform.m_translation = {xOffset, 2.0f, 0.0f};
+            square.m_transform.m_scale = {1.0f, 1.0f, 1.0f};
             m_renderObjects.push_back(square);
-            xOffset += 0.3f;
+            xOffset += 2.0f;
         }
 
     }

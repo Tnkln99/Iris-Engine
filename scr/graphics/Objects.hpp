@@ -24,12 +24,71 @@ namespace iris::graphics{
         glm::vec3 m_minLocal{};
         glm::vec3 m_maxLocal{};
 
-        [[nodiscard]] std::pair<glm::vec3, glm::vec3> getWorldPositions(glm::mat4 modelMatrix) const{
-            glm::vec3 min = modelMatrix * glm::vec4(m_minLocal, 1.0f);
-            glm::vec3 max = modelMatrix * glm::vec4(m_maxLocal, 1.0f);
+        glm::vec3 m_minWorld{};
+        glm::vec3 m_maxWorld{};
 
-            std::pair<glm::vec3, glm::vec3> minMax{min, max};
-            return minMax;
+        void update(float dt, glm::mat4 modelMatrix){
+            // Define the 8 corners of the bounding box in local space
+            std::vector<glm::vec3> corners = {
+                    glm::vec3(m_minLocal.x, m_minLocal.y, m_minLocal.z),
+                    glm::vec3(m_maxLocal.x, m_minLocal.y, m_minLocal.z),
+                    glm::vec3(m_maxLocal.x, m_maxLocal.y, m_minLocal.z),
+                    glm::vec3(m_minLocal.x, m_maxLocal.y, m_minLocal.z),
+                    glm::vec3(m_minLocal.x, m_minLocal.y, m_maxLocal.z),
+                    glm::vec3(m_maxLocal.x, m_minLocal.y, m_maxLocal.z),
+                    glm::vec3(m_maxLocal.x, m_maxLocal.y, m_maxLocal.z),
+                    glm::vec3(m_minLocal.x, m_maxLocal.y, m_maxLocal.z)
+            };
+
+            // Transform all corners to world space
+            for (glm::vec3& corner : corners) {
+                glm::vec4 worldSpaceCorner = modelMatrix * glm::vec4(corner, 1.0f);
+                corner.x = worldSpaceCorner.x;
+                corner.y = worldSpaceCorner.y;
+                corner.z = worldSpaceCorner.z;
+            }
+
+            // Initialize minWorld and maxWorld to the first corner
+            glm::vec3 minWorld = corners[0];
+            glm::vec3 maxWorld = corners[0];
+
+            // Find the new min and max extents in world space
+            for (const glm::vec3& corner : corners) {
+                minWorld.x = std::min(minWorld.x, corner.x);
+                minWorld.y = std::min(minWorld.y, corner.y);
+                minWorld.z = std::min(minWorld.z, corner.z);
+
+                maxWorld.x = std::max(maxWorld.x, corner.x);
+                maxWorld.y = std::max(maxWorld.y, corner.y);
+                maxWorld.z = std::max(maxWorld.z, corner.z);
+            }
+
+            // Update the world-space bounding box
+            m_minWorld = minWorld;
+            m_maxWorld = maxWorld;
+        }
+
+        bool rayIntersectsBox(const glm::vec3& rayOrigin, const glm::vec3& rayDir) {
+            float tMin = 0.0f;
+            float tMax = std::numeric_limits<float>::max();
+            const float EPSILON = 1e-8f; // A small epsilon value to handle floating-point errors
+
+            for (int i = 0; i < 3; ++i) {
+                if (std::abs(rayDir[i]) < EPSILON) {
+                    // Ray is parallel to slab. No hit if origin not within slab
+                    if (rayOrigin[i] < m_minWorld[i] || rayOrigin[i] > m_maxWorld[i]) return false;
+                } else {
+                    float invD = 1.0f / rayDir[i];
+                    float t0 = (m_minWorld[i] - rayOrigin[i]) * invD;
+                    float t1 = (m_maxWorld[i] - rayOrigin[i]) * invD;
+                    if (invD < 0.0f) std::swap(t0, t1);
+                    tMin = std::max(tMin, t0);
+                    tMax = std::min(tMax, t1);
+                    if (tMax <= tMin) return false;
+                }
+            }
+
+            return true;
         }
 
         void calculateLocalBounds(Model& model){
@@ -48,18 +107,32 @@ namespace iris::graphics{
             m_minLocal = min;
             m_maxLocal = max;
 
+            if (m_maxLocal.x - m_minLocal.x == 0){
+                m_maxLocal.x += 0.1f;
+                m_minLocal.x -= 0.1f;
+
+            }
+            if (m_maxLocal.y - m_minLocal.y == 0){
+                m_maxLocal.y += 0.1f;
+                m_minLocal.y -= 0.1f;
+            }
+            if (m_maxLocal.z - m_minLocal.z == 0){
+                m_maxLocal.z += 0.1f;
+                m_minLocal.z -= 0.1f;
+            }
+
             builder.m_vertices = {
                     // Bottom face
-                    Model::Vertex(glm::vec3(min.x, min.y, min.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(max.x, min.y, min.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(max.x, max.y, min.z), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)),
-                    Model::Vertex(glm::vec3(min.x, max.y, min.z), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)),
+                    Model::Vertex(glm::vec3(m_minLocal.x, m_minLocal.y, m_minLocal.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)),
+                    Model::Vertex(glm::vec3(m_maxLocal.x, m_minLocal.y, m_minLocal.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)),
+                    Model::Vertex(glm::vec3(m_maxLocal.x, m_maxLocal.y, m_minLocal.z), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)),
+                    Model::Vertex(glm::vec3(m_minLocal.x, m_maxLocal.y, m_minLocal.z), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)),
 
                     // Top face
-                    Model::Vertex(glm::vec3(min.x, min.y, max.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(max.x, min.y, max.z), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(max.x, max.y, max.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-                    Model::Vertex(glm::vec3(min.x, max.y, max.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
+                    Model::Vertex(glm::vec3(m_minLocal.x, m_minLocal.y, m_maxLocal.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+                    Model::Vertex(glm::vec3(m_maxLocal.x, m_minLocal.y, m_maxLocal.z), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+                    Model::Vertex(glm::vec3(m_maxLocal.x, m_maxLocal.y, m_maxLocal.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+                    Model::Vertex(glm::vec3(m_minLocal.x, m_maxLocal.y, m_maxLocal.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
             };
 
             builder.m_indices = {
@@ -89,7 +162,7 @@ namespace iris::graphics{
         Transform m_transform{};
 
         [[nodiscard]] std::shared_ptr<Model> getModel() const { return m_pModel; }
-        [[nodiscard]] BoundingBox getBoundingBox() const { return m_boundingBox; }
+        [[nodiscard]] BoundingBox& getBoundingBox() { return m_boundingBox; }
 
         void updateInfo(){
             m_gpuObjectData.m_modelMatrix = modelMatrix();
@@ -100,9 +173,9 @@ namespace iris::graphics{
             m_pModel = std::move(model);
             m_boundingBox = BoundingBox(*m_pModel);
         }
-    private:
         glm::mat4 modelMatrix();
         glm::mat3 normalMatrix();
+    private:
 
         std::shared_ptr<Model> m_pModel{};
         BoundingBox m_boundingBox{};
@@ -115,16 +188,22 @@ namespace iris::graphics{
             glm::mat4 m_proj;
             glm::mat4 m_viewProj;
         };
+        explicit Camera(Window& window);
 
-        Camera();
+        [[nodiscard]] glm::mat4 getViewMatrix() const { return m_viewMatrix; }
+        [[nodiscard]] glm::mat4 getProjectionMatrix() const { return m_projectionMatrix; }
+        [[nodiscard]] Transform getTransform() const { return m_transform; }
+        glm::vec3 getCameraRay(double x, double y);
+        glm::vec3 screenPointToRayOrigin(glm::vec3 rayDir);
 
         Transform m_transform{};
 
         glm::mat4 m_viewMatrix = glm::mat4(1.0f);
         glm::mat4 m_projectionMatrix = glm::mat4(1.0f);
 
-        void update(VkExtent2D windowExtent, float dt);
+        void update(float dt);
     private:
+        Window& m_rWindow;
         glm::vec3 m_target = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::vec3 m_up = glm::vec3(0.0f, -1.0f, 0.0f);
         glm::vec3 m_front = glm::vec3(0.0f, 0.0f, -1.0f);

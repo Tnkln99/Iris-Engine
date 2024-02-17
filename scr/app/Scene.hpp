@@ -12,7 +12,7 @@ using namespace iris::graphics;
 namespace iris::app{
     class Scene {
     public:
-        explicit Scene(ForwardRenderer& renderer);
+        explicit Scene(ForwardRenderer& renderer, Window& window);
         ~Scene();
 
         void loadScene();
@@ -20,9 +20,10 @@ namespace iris::app{
         void draw();
     private:
         ForwardRenderer& m_rRenderer;
+        Window& m_rWindow;
 
         GpuSceneData m_sceneData{};
-        graphics::Camera m_camera{};
+        graphics::Camera m_camera{m_rWindow};
         std::vector<RenderObject> m_renderObjects{};
         std::vector<PointLight> m_PointLights{};
 

@@ -179,11 +179,7 @@ namespace iris::graphics{
                                m_uboSceneBuffers[getCurrentFrame()],
                                sizeof(GpuSceneData));
 
-        camera.update(getSwapchainExtent(),
-                        utils::Timer::getDeltaTime());
-
         for(auto & renderObject : renderObjects){
-            renderObject.updateInfo();
             auto materialInst = renderObject.m_pMaterialInstance;
             auto material = renderObject.m_pMaterialInstance->m_pMaterial;
 

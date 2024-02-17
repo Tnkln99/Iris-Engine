@@ -21,6 +21,7 @@ namespace iris::graphics{
         glfwSetWindowUserPointer(m_pWindow, this);
         glfwSetCursorPosCallback(m_pWindow, mouseCallback);
         glfwSetKeyCallback(m_pWindow, keyCallback);
+        glfwSetMouseButtonCallback(m_pWindow, mouseButtonCallback);
     }
 
     bool Window::shouldCloseWindow() {
@@ -59,5 +60,13 @@ namespace iris::graphics{
         m_sKeyInfo.m_scancode = scancode;
         m_sKeyInfo.m_action = action;
         m_sKeyInfo.m_mods = mods;
+    }
+
+    void Window::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
+
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            // Perform the action here
+            m_sMouseInfo.m_isLeftButtonPressedLastFrame = true;
+        }
     }
 }

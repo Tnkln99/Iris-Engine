@@ -37,5 +37,6 @@ namespace iris {
         AssetsManager::loadTexture(m_device, "StarDiffuse", "../assets/star/Diffuse.png");
         AssetsManager::loadTexture(m_device, "StarSpecular", "../assets/star/Specular.png");
         AssetsManager::loadTexture(m_device, "RedColor", "../assets/Red.jpg");
+        AssetsManager::loadTexture(m_device, "T_Frame", "../assets/Frame.jpg");
     }
 }

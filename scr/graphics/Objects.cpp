@@ -66,31 +66,36 @@ namespace iris::graphics{
 
     ////////////////////////////////////////////////////////////////////////////
 
-    Camera::Camera() {
-        m_transform.m_translation = {0, 0.5f, 3};
+    Camera::Camera(Window& window) : m_rWindow{window}{
+        m_transform.m_translation = {0, 0.0f, 40};
     }
 
-    void Camera::update(VkExtent2D windowExtent, float dt) {
-        if (Window::m_sKeyInfo.m_key == GLFW_KEY_D && Window::m_sKeyInfo.m_action != 0){
-            m_transform.m_translation = glm::rotate(
-                    m_transform.m_translation,
-                    glm::radians(m_speed) * dt,
-                    m_up);
-        }
-        if (Window::m_sKeyInfo.m_key == GLFW_KEY_A && Window::m_sKeyInfo.m_action != 0){
-            m_transform.m_translation = glm::rotate(
-                    m_transform.m_translation,
-                    -glm::radians(m_speed) * dt,
-                    m_up);
-        }
+    glm::vec3 Camera::getCameraRay(double mouseX, double mouseY) {
+        float x = (2.0f * mouseX) / m_rWindow.getWidth() - 1.0f;
+        float y = 1.0f - (2.0f * mouseY) / m_rWindow.getHeight();
+        float z = 1.0f;
+        glm::vec3 ray_nds = glm::vec3(x, y, z);
 
+        glm::vec4 ray_clip = glm::vec4(glm::vec2(ray_nds.x, ray_nds.y), -1.0, 1.0);
 
+        glm::vec4 ray_eye = inverse(m_projectionMatrix) * ray_clip;
+        ray_eye = glm::vec4(glm::vec2(ray_eye.x,ray_eye.y), -1.0, 0.0);
 
+        glm::vec3 ray_wor = glm::vec3(inverse(m_viewMatrix) * ray_eye);
+        ray_wor = glm::normalize(ray_wor);
+
+        return ray_wor;
+    }
+
+    void Camera::update(float dt) {
         m_viewMatrix = glm::lookAt(m_transform.m_translation,
-                                   glm::vec3(0,0,0),
+                                   m_transform.m_translation + m_front,
                                    m_up);
-        m_projectionMatrix = glm::perspective(glm::radians(45.0f), (float)windowExtent.width / (float)windowExtent.height, 0.1f, 100.0f);
+        m_projectionMatrix = glm::perspective(glm::radians(45.0f), (float)m_rWindow.getWidth() / (float)m_rWindow.getHeight(), 0.1f, 100.0f);
     }
+
+
+
 
     PointLight::PointLight(glm::vec3 position, glm::vec3 color) {
         m_gpuLightData.m_lightPosition = position;

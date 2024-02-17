@@ -20,7 +20,7 @@ namespace iris {
         graphics::Device m_device{m_window};
         graphics::ForwardRenderer m_renderer{m_device, m_window};
 
-        app::Scene m_scene{m_renderer};
+        app::Scene m_scene{m_renderer, m_window};
 
         void loadModels();
         void loadImages();

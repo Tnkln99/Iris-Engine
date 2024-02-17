@@ -22,6 +22,7 @@ namespace iris::graphics{
         inline static struct MouseInfo{
             double m_xPos;
             double m_yPos;
+            bool m_isLeftButtonPressedLastFrame;
         } m_sMouseInfo{};
         inline static struct KeyInfo{
             int m_key;
@@ -37,6 +38,7 @@ namespace iris::graphics{
         std::string m_name;
 
         static void mouseCallback(GLFWwindow* window, double xPos, double yPos);
+        static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
         static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     };
 }
