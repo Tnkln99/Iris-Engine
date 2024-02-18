@@ -490,4 +490,8 @@ namespace iris::graphics{
         return outImage;
     }
 
+    const VkAllocationCallbacks *Device::getAllocationCallbacks() {
+        return &m_allocator->m_AllocationCallbacks;
+    }
+
 }

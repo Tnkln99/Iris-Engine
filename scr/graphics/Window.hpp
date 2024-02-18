@@ -30,8 +30,8 @@ namespace iris::graphics{
             int m_action;
             int m_mods;
         } m_sKeyInfo{};
-    private:
         GLFWwindow * m_pWindow;
+    private:
 
         int m_width;
         int m_height;

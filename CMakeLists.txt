@@ -23,20 +23,23 @@ if(GIT_FOUND)
             lib/vma;
             lib/glm;
             lib/tinyobjloader
-            lib/stb)
+            lib/stb;
+            lib/imgui)
     set(REPOSITORIES https://github.com/KhronosGroup/Vulkan-Headers.git;
             https://github.com/glfw/glfw.git;
             https://github.com/charles-lunarg/vk-bootstrap;
             https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git;
             https://github.com/g-truc/glm.git;
-            https://github.com/tinyobjloader/tinyobjloader.git
-            https://github.com/nothings/stb.git)
+            https://github.com/tinyobjloader/tinyobjloader.git;
+            https://github.com/nothings/stb.git;
+            https://github.com/ocornut/imgui.git;)
     set(RELEASES main;
             3.2.1;
             main;
             master;
             master;
             release;
+            master;
             master;)
 
     foreach(UPD_SUB IN LISTS SUBMODULES)
@@ -78,8 +81,11 @@ include_directories(lib/glm)
 add_subdirectory(lib/tinyobjloader)
 include_directories(lib/tinyobjloader)
 include_directories(lib/stb)
+include_directories(lib/imgui lib/imgui/backends)
 
 find_package(Vulkan REQUIRED)
+
+file(GLOB IMGUI_FILES "./lib/imgui/*.h" "./lib/imgui/*.cpp" "./lib/imgui/backends/*glfw*" "./lib/imgui/backends/*vulkan*")
 
 # shader compilation
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
@@ -106,7 +112,7 @@ add_custom_target(
 
 # Compile and link all source files in the "src" directory
 file(GLOB_RECURSE SRC_FILES "./scr/*.hpp" "./scr/*.cpp")
-add_executable(Iris ${SRC_FILES} ${SPIRV_BINARY_FILES})
+add_executable(Iris ${SRC_FILES} ${SPIRV_BINARY_FILES} ${IMGUI_FILES})
 
 # Link against all libraries
 target_link_libraries(Iris ${Vulkan_LIBRARIES} glfw vk-bootstrap::vk-bootstrap tinyobjloader)

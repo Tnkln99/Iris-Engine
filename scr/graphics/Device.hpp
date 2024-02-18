@@ -96,6 +96,8 @@ namespace iris::graphics{
 
         void immediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
         AllocatedImage loadTexture(const std::string& filePath);
+
+        const VkAllocationCallbacks* getAllocationCallbacks();
     private:
         Window& m_rWindow;
 

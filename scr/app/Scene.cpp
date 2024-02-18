@@ -1,7 +1,7 @@
 #include "Scene.hpp"
 #include "../graphics/AssetsManager.hpp"
 
-#include <cassert>
+#include <imgui.h>
 
 namespace iris::app{
 
@@ -18,6 +18,8 @@ namespace iris::app{
     }
 
     void Scene::update() {
+        ImGuiIO& io = ImGui::GetIO();
+
         m_camera.update(utils::Timer::getDeltaTime());
         double mouseX = Window::m_sMouseInfo.m_xPos;
         double mouseY = Window::m_sMouseInfo.m_yPos;
@@ -25,7 +27,7 @@ namespace iris::app{
         for(auto & renderObject : m_renderObjects){
             renderObject.updateInfo();
             renderObject.getBoundingBox().update(utils::Timer::getDeltaTime(), renderObject.modelMatrix());
-            if ( renderObject.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir)){
+            if ( renderObject.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir) && !io.WantCaptureMouse){
                 renderObject.getBoundingBox().m_show = true;
                 if(Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame){
                     renderObject.m_pMaterialInstance = AssetsManager::getMaterialInstance("MI_StarTextured");

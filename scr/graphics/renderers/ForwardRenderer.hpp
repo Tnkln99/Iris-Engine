@@ -6,6 +6,7 @@
 #include "../Debugger.hpp"
 #include "../Descriptors.hpp"
 #include "../../utilities/Timer.hpp"
+#include "imgui_impl_vulkan.h"
 
 
 namespace iris::graphics{
@@ -47,6 +48,9 @@ namespace iris::graphics{
 
         VkRenderPass m_renderPass{};
         void createRenderPass();
+
+        void initImgui();
+        VkDescriptorPool m_imguiPool;
     };
 }
 

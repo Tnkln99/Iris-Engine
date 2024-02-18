@@ -1,6 +1,9 @@
 #include "ForwardRenderer.hpp"
 #include "../AssetsManager.hpp"
+#include "imgui_impl_vulkan.h"
+#include "imgui_impl_glfw.h"
 
+#include <imgui.h>
 namespace iris::graphics{
 
     ForwardRenderer::ForwardRenderer(Device &device, Window& window) : Renderer(device, window) {
@@ -10,6 +13,9 @@ namespace iris::graphics{
         createCommandBuffers();
         createRenderPass();
         m_pSwapchain->createFramebuffers(m_renderPass);
+
+
+        initImgui();
     }
 
 
@@ -25,6 +31,11 @@ namespace iris::graphics{
     void ForwardRenderer::postRender() {
         vkDeviceWaitIdle(m_rDevice.getDevice());
         freeCommandBuffers();
+
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        vkDestroyDescriptorPool(m_rDevice.getDevice(), m_imguiPool, nullptr);
     }
 
     void ForwardRenderer::createRenderPass() {
@@ -109,6 +120,11 @@ namespace iris::graphics{
                 , "Failed to create render pass!");
     }
 
+    void ForwardRenderer::loadRenderer() {
+        initDescriptorSets();
+        initMaterials();
+    }
+
     VkCommandBuffer ForwardRenderer::beginFrame() {
         uint32_t imageIndex = m_pSwapchain->acquireNextImage(getCurrentFrame());
         auto cmd = m_commandBuffers[getCurrentFrame()];
@@ -150,21 +166,32 @@ namespace iris::graphics{
         vkCmdSetViewport(cmd, 0, 1, &viewport);
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
+
+
+        // Start the Dear ImGui frame
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::ShowDemoWindow();
+
+        ImGui::Render();
+
+
         return cmd;
     }
 
-
-    void ForwardRenderer::loadRenderer() {
-        initDescriptorSets();
-        initMaterials();
-    }
-
     void ForwardRenderer::endFrame(VkCommandBuffer cmd) {
+        ImDrawData* draw_data = ImGui::GetDrawData();
+
+        ImGui_ImplVulkan_RenderDrawData(draw_data, cmd);
         vkCmdEndRenderPass(cmd);
         Debugger::vkCheck(vkEndCommandBuffer(cmd), "Failed to record command buffer!");
 
         m_pSwapchain->submitCommandBuffers(&cmd, getCurrentFrame());
         m_frameCount++;
+
+        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     }
 
     // todo: last material and last model tracking to decrease the number of pipeline binds
@@ -418,6 +445,62 @@ namespace iris::graphics{
     std::shared_ptr<Material::MaterialInstance> ForwardRenderer::createMaterialInstance(std::string matName) {
         auto mat = AssetsManager::getMaterial(matName);
         return std::make_shared<Material::MaterialInstance>(mat);
+    }
+
+    void ForwardRenderer::initImgui() {
+        //1: create descriptor pool for IMGUI
+        // the size of the pool is very oversize, but it's copied from imgui demo itself.
+        VkDescriptorPoolSize pool_sizes[] =
+                {
+                        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+                        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+                        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+                };
+
+        VkDescriptorPoolCreateInfo pool_info = {};
+        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        pool_info.maxSets = 1000;
+        pool_info.poolSizeCount = std::size(pool_sizes);
+        pool_info.pPoolSizes = pool_sizes;
+
+
+        Debugger::vkCheck(vkCreateDescriptorPool(m_rDevice.getDevice(), &pool_info, nullptr, &m_imguiPool),
+            "Failed to create descriptor pool for imgui");
+
+        // 2: initialize imgui library
+
+        //this initializes the core structures of imgui
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+
+        //this initializes imgui for glfw
+        ImGui_ImplGlfw_InitForVulkan(m_rWindow.m_pWindow, true);
+
+        //this initializes imgui for Vulkan
+        ImGui_ImplVulkan_InitInfo init_info = {};
+        init_info.Instance = m_rDevice.getInstance();
+        init_info.PhysicalDevice = m_rDevice.getPhysicalDevice();
+        init_info.Device = m_rDevice.getDevice();
+        init_info.Queue = m_rDevice.getGraphicsQueue();
+        init_info.DescriptorPool = m_imguiPool;
+        init_info.RenderPass = m_renderPass;
+        init_info.MinImageCount = 3;
+        init_info.ImageCount = 3;
+        init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+        ImGui_ImplVulkan_Init(&init_info);
     }
 
 }
