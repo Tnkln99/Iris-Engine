@@ -175,13 +175,21 @@ namespace iris::graphics{
 
         ImGui::ShowDemoWindow();
 
-        ImGui::Render();
+
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            ImGui::Begin("Frame Rate");
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
+        }
 
 
         return cmd;
     }
 
     void ForwardRenderer::endFrame(VkCommandBuffer cmd) {
+        ImGui::Render();
+
         ImDrawData* draw_data = ImGui::GetDrawData();
 
         ImGui_ImplVulkan_RenderDrawData(draw_data, cmd);
@@ -190,21 +198,19 @@ namespace iris::graphics{
 
         m_pSwapchain->submitCommandBuffers(&cmd, getCurrentFrame());
         m_frameCount++;
-
-        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     }
 
     // todo: last material and last model tracking to decrease the number of pipeline binds
-    void ForwardRenderer::renderScene(std::vector<RenderObject> & renderObjects, GpuSceneData sceneData,
-                                      Camera & camera) {
-        VkCommandBuffer cmd = beginFrame();
+    void ForwardRenderer::renderScene(VkCommandBuffer cmd, std::vector<app::RenderObject> & renderObjects, app::GpuSceneData sceneData,
+                                      app::Camera & camera) {
 
         sceneData.m_projectionMatrix = camera.m_projectionMatrix;
         sceneData.m_viewMatrix = camera.m_viewMatrix;
 
         m_rDevice.copyToBuffer(&sceneData,
                                m_uboSceneBuffers[getCurrentFrame()],
-                               sizeof(GpuSceneData));
+                               sizeof(app::GpuSceneData));
+
 
         for(auto & renderObject : renderObjects){
             auto materialInst = renderObject.m_pMaterialInstance;
@@ -235,16 +241,17 @@ namespace iris::graphics{
                     material->getPipeLineLayout(),
                     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                     0,
-                    sizeof(RenderObject::GpuObjectData),
+                    sizeof(app::RenderObject::GpuObjectData),
                     &renderObject.m_gpuObjectData);
 
             renderObject.getModel()->bind(cmd);
             renderObject.getModel()->draw(cmd);
+        }
 
-
+        AssetsManager::getMaterial("DebugBox")->getPipeline()->bind(cmd);
+        for(auto & renderObject : renderObjects){
             if (renderObject.getBoundingBox().m_pDebugModel != nullptr && renderObject.getBoundingBox().m_show)
             {
-                AssetsManager::getMaterial("DebugBox")->getPipeline()->bind(cmd);
                 vkCmdBindDescriptorSets(
                         cmd,
                         VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -261,16 +268,13 @@ namespace iris::graphics{
                         AssetsManager::getMaterial("DebugBox")->getPipeLineLayout(),
                         VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                         0,
-                        sizeof(RenderObject::GpuObjectData),
+                        sizeof(app::RenderObject::GpuObjectData),
                         &renderObject.m_gpuObjectData);
 
                 renderObject.getBoundingBox().m_pDebugModel->bind(cmd);
                 renderObject.getBoundingBox().m_pDebugModel->draw(cmd);
             }
-
         }
-
-        endFrame(cmd);
     }
 
     void ForwardRenderer::createCommandBuffers() {
@@ -301,7 +305,7 @@ namespace iris::graphics{
 
         for(auto & uboBuffer : m_uboSceneBuffers)
         {
-            uboBuffer = m_rDevice.createBuffer(sizeof(GpuSceneData),VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            uboBuffer = m_rDevice.createBuffer(sizeof(app::GpuSceneData),VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                                VMA_MEMORY_USAGE_CPU_TO_GPU);
         }
 
@@ -314,7 +318,7 @@ namespace iris::graphics{
             VkDescriptorBufferInfo sceneInfo;
             sceneInfo.buffer = m_uboSceneBuffers[i].m_buffer;
             sceneInfo.offset = 0;
-            sceneInfo.range = sizeof(GpuSceneData);
+            sceneInfo.range = sizeof(app::GpuSceneData);
 
             DescriptorWriter(*m_pGlobalSetLayout, *m_pGlobalPool)
                     .writeBuffer(0, &sceneInfo)
@@ -336,7 +340,7 @@ namespace iris::graphics{
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(RenderObject::GpuObjectData);
+        pushConstantRange.size = sizeof(app::RenderObject::GpuObjectData);
 
         pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
         pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();

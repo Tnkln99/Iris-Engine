@@ -1,13 +1,13 @@
 #ifndef IRIS_OBJECTS_HPP
 #define IRIS_OBJECTS_HPP
 
-#include "Model.hpp"
-#include "Material.hpp"
+#include "../graphics/Model.hpp"
+#include "../graphics/Material.hpp"
 
 #include <memory>
 #include <utility>
 
-namespace iris::graphics{
+namespace iris::app{
     struct Transform{
         glm::vec3 m_translation{};
         glm::vec3 m_scale{1.f, 1.f, 1.f};
@@ -16,11 +16,11 @@ namespace iris::graphics{
 
     struct BoundingBox{
         BoundingBox() = default;
-        explicit BoundingBox(Model& model){
+        explicit BoundingBox(graphics::Model& model){
             calculateLocalBounds(model);
         };
         bool m_show = true;
-        std::shared_ptr<Model> m_pDebugModel{};
+        std::shared_ptr<graphics::Model> m_pDebugModel{};
         glm::vec3 m_minLocal{};
         glm::vec3 m_maxLocal{};
 
@@ -78,8 +78,8 @@ namespace iris::graphics{
             return tNear <= tFar;
         }
 
-        void calculateLocalBounds(Model& model){
-            Model::Builder builder{};
+        void calculateLocalBounds(graphics::Model& model){
+            graphics::Model::Builder builder{};
             glm::vec3 min = model.m_vertices[0].m_position, max = model.m_vertices[0].m_position;
             for (const auto& vertex : model.m_vertices) {
                 min.x = std::min(min.x, vertex.m_position.x);
@@ -110,16 +110,16 @@ namespace iris::graphics{
 
             builder.m_vertices = {
                     // Bottom face
-                    Model::Vertex(glm::vec3(m_minLocal.x, m_minLocal.y, m_minLocal.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(m_maxLocal.x, m_minLocal.y, m_minLocal.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(m_maxLocal.x, m_maxLocal.y, m_minLocal.z), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)),
-                    Model::Vertex(glm::vec3(m_minLocal.x, m_maxLocal.y, m_minLocal.z), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_minLocal.x, m_minLocal.y, m_minLocal.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_maxLocal.x, m_minLocal.y, m_minLocal.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_maxLocal.x, m_maxLocal.y, m_minLocal.z), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_minLocal.x, m_maxLocal.y, m_minLocal.z), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)),
 
                     // Top face
-                    Model::Vertex(glm::vec3(m_minLocal.x, m_minLocal.y, m_maxLocal.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(m_maxLocal.x, m_minLocal.y, m_maxLocal.z), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
-                    Model::Vertex(glm::vec3(m_maxLocal.x, m_maxLocal.y, m_maxLocal.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-                    Model::Vertex(glm::vec3(m_minLocal.x, m_maxLocal.y, m_maxLocal.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_minLocal.x, m_minLocal.y, m_maxLocal.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_maxLocal.x, m_minLocal.y, m_maxLocal.z), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_maxLocal.x, m_maxLocal.y, m_maxLocal.z), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+                    graphics::Model::Vertex(glm::vec3(m_minLocal.x, m_maxLocal.y, m_maxLocal.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
             };
 
             builder.m_indices = {
@@ -134,10 +134,10 @@ namespace iris::graphics{
                     3, 7, 4, 4, 0, 3
             };
 
-            m_pDebugModel = std::make_shared<Model>(model.m_rDevice, builder);
+            m_pDebugModel = std::make_shared<graphics::Model>(model.m_rDevice, builder);
         }
     };
-
+    class Scene;
     class RenderObject {
     public:
         struct GpuObjectData{
@@ -145,10 +145,10 @@ namespace iris::graphics{
             glm::mat4 m_normalMatrix{1.f };
         } m_gpuObjectData;
 
-        std::shared_ptr<Material::MaterialInstance> m_pMaterialInstance{};
+        std::shared_ptr<graphics::Material::MaterialInstance> m_pMaterialInstance{};
         Transform m_transform{};
 
-        [[nodiscard]] std::shared_ptr<Model> getModel() const { return m_pModel; }
+        [[nodiscard]] std::shared_ptr<graphics::Model> getModel() const { return m_pModel; }
         [[nodiscard]] BoundingBox& getBoundingBox() { return m_boundingBox; }
 
         void updateInfo(){
@@ -156,7 +156,7 @@ namespace iris::graphics{
             m_gpuObjectData.m_normalMatrix = normalMatrix();
         }
 
-        void setModel(std::shared_ptr<Model> model){
+        void setModel(std::shared_ptr<graphics::Model> model){
             m_pModel = std::move(model);
             m_boundingBox = BoundingBox(*m_pModel);
         }
@@ -164,7 +164,7 @@ namespace iris::graphics{
         glm::mat3 normalMatrix();
     private:
 
-        std::shared_ptr<Model> m_pModel{};
+        std::shared_ptr<graphics::Model> m_pModel{};
         BoundingBox m_boundingBox{};
     };
 
@@ -175,7 +175,7 @@ namespace iris::graphics{
             glm::mat4 m_proj;
             glm::mat4 m_viewProj;
         };
-        explicit Camera(Window& window);
+        explicit Camera(graphics::Window& window);
 
         [[nodiscard]] glm::mat4 getViewMatrix() const { return m_viewMatrix; }
         [[nodiscard]] glm::mat4 getProjectionMatrix() const { return m_projectionMatrix; }
@@ -189,7 +189,7 @@ namespace iris::graphics{
 
         void update(float dt);
     private:
-        Window& m_rWindow;
+        graphics::Window& m_rWindow;
         glm::vec3 m_target = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::vec3 m_up = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 m_front = glm::vec3(0.0f, 0.0f, -1.0f);

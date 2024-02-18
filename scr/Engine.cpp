@@ -23,20 +23,22 @@ namespace iris {
         }
 
         m_renderer.postRender();
-        AssetsManager::clear(m_device);
+        graphics::AssetsManager::clear(m_device);
     }
 
     void Engine::loadModels() {
-        AssetsManager::loadModel(m_device, "Star", "../assets/star/Star.obj");
-        AssetsManager::loadModel(m_device, "Plane", "../assets/plane/Plane.obj");
-        AssetsManager::loadModel(m_device, "Square", "../assets/Square.obj");
+        graphics::AssetsManager::loadModel(m_device, "Star", "../assets/star/Star.obj");
+        graphics::AssetsManager::loadModel(m_device, "Plane", "../assets/plane/Plane.obj");
+        graphics::AssetsManager::loadModel(m_device, "Square", "../assets/Square.obj");
     }
 
     void Engine::loadImages() {
-        AssetsManager::loadTexture(m_device, "StarAmbient", "../assets/star/Ambient.png");
-        AssetsManager::loadTexture(m_device, "StarDiffuse", "../assets/star/Diffuse.png");
-        AssetsManager::loadTexture(m_device, "StarSpecular", "../assets/star/Specular.png");
-        AssetsManager::loadTexture(m_device, "RedColor", "../assets/Red.jpg");
-        AssetsManager::loadTexture(m_device, "T_Frame", "../assets/Frame.jpg");
+        graphics::AssetsManager::loadTexture(m_device, "StarAmbient", "../assets/star/Ambient.png");
+        graphics::AssetsManager::loadTexture(m_device, "StarDiffuse", "../assets/star/Diffuse.png");
+        graphics::AssetsManager::loadTexture(m_device, "StarSpecular", "../assets/star/Specular.png");
+        graphics::AssetsManager::loadTexture(m_device, "T_Obstacle", "../assets/Obstacle.png");
+        graphics::AssetsManager::loadTexture(m_device, "T_Target", "../assets/Target.png");
+        graphics::AssetsManager::loadTexture(m_device, "T_Man", "../assets/Man.png");
+        graphics::AssetsManager::loadTexture(m_device, "T_Walkable", "../assets/Walkable.png");
     }
 }

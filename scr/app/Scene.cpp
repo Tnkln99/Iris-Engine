@@ -5,7 +5,7 @@
 
 namespace iris::app{
 
-    Scene::Scene(ForwardRenderer &renderer, Window& window) : m_rRenderer{renderer}, m_rWindow{window} {
+    Scene::Scene(graphics::ForwardRenderer &renderer, graphics::Window& window) : m_rRenderer{renderer}, m_rWindow{window} {
         m_rRenderer.init();
         utils::Timer::init();
 
@@ -18,31 +18,68 @@ namespace iris::app{
     }
 
     void Scene::update() {
+        m_renderObjects.clear();
         ImGuiIO& io = ImGui::GetIO();
 
         m_camera.update(utils::Timer::getDeltaTime());
-        double mouseX = Window::m_sMouseInfo.m_xPos;
-        double mouseY = Window::m_sMouseInfo.m_yPos;
+        double mouseX = graphics::Window::m_sMouseInfo.m_xPos;
+        double mouseY = graphics::Window::m_sMouseInfo.m_yPos;
         auto rayDir = glm::normalize(glm::vec3(m_camera.getCameraRay(mouseX, mouseY)));
-        for(auto & renderObject : m_renderObjects){
-            renderObject.updateInfo();
-            renderObject.getBoundingBox().update(utils::Timer::getDeltaTime(), renderObject.modelMatrix());
-            if ( renderObject.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir) && !io.WantCaptureMouse){
-                renderObject.getBoundingBox().m_show = true;
-                if(Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame){
-                    renderObject.m_pMaterialInstance = AssetsManager::getMaterialInstance("MI_StarTextured");
+        for(auto & tile : m_navigationArea.m_tiles){
+            tile.second.updateInfo();
+            tile.second.getBoundingBox().update(utils::Timer::getDeltaTime(), tile.second.modelMatrix());
+            if ( tile.second.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir) && !io.WantCaptureMouse){
+                tile.second.getBoundingBox().m_show = true;
+                if(graphics::Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame){
+                    if (m_navigationArea.m_startTileIndex == tile.first)
+                        continue;
+                    if (m_navigationArea.m_targetTileIndex == tile.first)
+                        continue;
+                    tile.second.changeType(m_paintType);
+                    if(m_paintType == ai::NavigationTile2D::TileType::START){
+                        if ( m_navigationArea.m_startTileIndex != -1)
+                            m_navigationArea.m_tiles[m_navigationArea.m_startTileIndex].changeType(ai::NavigationTile2D::TileType::WALKABLE);
+                        m_navigationArea.m_startTileIndex = tile.first;
+                    }
+
+                    if(m_paintType == ai::NavigationTile2D::TileType::TARGET){
+                        if ( m_navigationArea.m_targetTileIndex != -1)
+                            m_navigationArea.m_tiles[m_navigationArea.m_targetTileIndex].changeType(ai::NavigationTile2D::TileType::WALKABLE);
+                        m_navigationArea.m_targetTileIndex = tile.first;
+                    }
                 }
             }
             else{
-                renderObject.getBoundingBox().m_show = false;
+                tile.second.getBoundingBox().m_show = false;
             }
+            m_renderObjects.push_back(tile.second);
         }
-        Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame = false;
+
+
+        //m_star01.updateInfo();
+        //m_star01.getBoundingBox().update(utils::Timer::getDeltaTime(), m_star01.modelMatrix());
+        //if (m_star01.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir) && !io.WantCaptureMouse){
+        //    std::cout << "Star intersects" << std::endl;
+        //    m_star01.getBoundingBox().m_show = true;
+        //    if(Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame){
+        //        m_star01.m_pMaterialInstance = AssetsManager::getMaterialInstance("MI_StarTextured");
+        //    }
+        //}
+        //else{
+        //    m_star01.getBoundingBox().m_show = false;
+        //}
+        //m_renderObjects.push_back(m_star01);
+
+        graphics::Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame = false;
     }
 
     void Scene::draw() {
         update();
-        m_rRenderer.renderScene(m_renderObjects, m_sceneData, m_camera);
+
+        auto cmd = m_rRenderer.beginFrame();
+        drawUi();
+        m_rRenderer.renderScene(cmd, m_renderObjects, m_sceneData, m_camera);
+        m_rRenderer.endFrame(cmd);
     }
 
     void Scene::loadScene() {
@@ -51,41 +88,89 @@ namespace iris::app{
     }
 
     void Scene::initObjects() {
-        AssetsManager::storeMaterialInstance("MI_RedTextured", m_rRenderer.createMaterialInstance("M_Textured", "RedColor", "RedColor", "RedColor"));
-        AssetsManager::storeMaterialInstance("MI_StarTextured", m_rRenderer.createMaterialInstance("M_Textured", "StarAmbient", "StarDiffuse", "StarSpecular"));
-        AssetsManager::storeMaterialInstance("MI_FrameTextured", m_rRenderer.createMaterialInstance("M_Textured", "T_Frame", "T_Frame", "T_Frame"));
-        AssetsManager::storeMaterialInstance("MI_Default", m_rRenderer.createMaterialInstance("M_Default"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Obstacle", m_rRenderer.createMaterialInstance("M_Textured", "T_Obstacle", "T_Obstacle", "T_Obstacle"));
+        graphics::AssetsManager::storeMaterialInstance("MI_StarTextured", m_rRenderer.createMaterialInstance("M_Textured", "StarAmbient", "StarDiffuse", "StarSpecular"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Man", m_rRenderer.createMaterialInstance("M_Textured", "T_Man", "T_Man", "T_Man"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Target", m_rRenderer.createMaterialInstance("M_Textured", "T_Target", "T_Target", "T_Target"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Walkable", m_rRenderer.createMaterialInstance("M_Textured", "T_Walkable", "T_Walkable", "T_Walkable"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Default", m_rRenderer.createMaterialInstance("M_Default"));
 
-        //RenderObject texturedStar01{};
-        //texturedStar01.setModel(AssetsManager::getModel("Star"));
-        //texturedStar01.m_pMaterialInstance = AssetsManager::getMaterialInstance("MI_RedTextured");
-        //texturedStar01.m_transform.m_translation = {-20.0f, 0.2f, 0.0f};
-        //texturedStar01.m_transform.m_scale = {10.0f, 10.0f, 10.0f};
-        //m_renderObjects.push_back(texturedStar01);
+        //m_star01.setModel(AssetsManager::getModel("Star"));
+        //m_star01.m_pMaterialInstance = AssetsManager::getMaterialInstance("MI_Obstacle");
+        //m_star01.m_transform.m_translation = {-20.0f, 0.2f, 0.0f};
+        //m_star01.m_transform.m_scale = {20.0f, 20.0f, 20.0f};
 
-        float yOffset = -20.0f;
-        for(int i = 0; i < 20; i++){
-            float xOffset = -20.0f;
-            for(int j = 0; j < 20; j++){
-                RenderObject square{};
-                square.setModel(AssetsManager::getModel("Square"));
-                square.m_pMaterialInstance = AssetsManager::getMaterialInstance("MI_FrameTextured");
-                square.m_transform.m_translation = {xOffset, yOffset, 0.0f};
-                square.m_transform.m_scale = {1.0f, 1.0f, 1.0f};
-                m_renderObjects.push_back(square);
-                xOffset += 2.0f;
-            }
-            yOffset += 2.0f;
-        }
-
+        m_navigationArea.loadArea();
     }
 
     void Scene::initLights() {
         m_PointLights.emplace_back(glm::vec3(0,0,1), glm::vec4(1,1,1,1));
-        //m_PointLights.emplace_back(glm::vec3(-1,1,-1), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(-10,0,1), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(10,0,1), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(10,-10,1), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(10,10,1), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(-10,-10,1), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(-10,10,1), glm::vec4(1,1,1,1));
         for(int i = 0; i < m_PointLights.size(); i++){
             m_sceneData.m_lights[i] = m_PointLights[i].m_gpuLightData;
         }
         m_sceneData.m_numLights = m_PointLights.size();
+    }
+
+    void Scene::drawUi() {
+
+        ImGui::Begin("Settings");
+        const char* items[] = { "Walkable", "Obstacle", "Target", "Start" };
+        static int item_current = 0; // Current item index
+        static int item_chosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
+
+        // Create a combo box
+        if (ImGui::Combo("Paint", &item_current, items, static_cast<int>(ai::NavigationTile2D::TileType::NONE)))
+        {
+            item_chosen = item_current;
+            m_paintType = static_cast<ai::NavigationTile2D::TileType>(item_chosen);
+        }
+
+        // Optionally, display the chosen item
+        if (item_chosen != -1)
+        {
+            ImGui::Text("Chosen paint: %s", items[item_chosen]);
+        }
+
+
+        const char* algos[] = { "Breadth First Search"};
+        static int currenAlgo = 0; // Current item index
+        static int algoChosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
+
+        // Create a combo box
+        if (ImGui::Combo("Algorithmes", &currenAlgo, algos, IM_ARRAYSIZE(algos)))
+        {
+            // Item selection logic can be handled here if needed
+            algoChosen = currenAlgo;
+        }
+
+        // Optionally, display the chosen item
+        if (algoChosen != -1)
+        {
+            ImGui::Text("Chosen algo: %s", algos[algoChosen]);
+        }
+
+        if (ImGui::Button("Start Simulation")) {
+            if(m_navigationArea.m_startTileIndex == -1 || m_navigationArea.m_targetTileIndex == -1){
+                ImGui::OpenPopup("my_select_popup");
+            }
+        }
+
+        if (ImGui::BeginPopup("my_select_popup"))
+        {
+            ImGui::Text("The required condition was not met.");
+            // Close button inside the popup
+            if (ImGui::Button("Close")) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
+        ImGui::End();
     }
 }

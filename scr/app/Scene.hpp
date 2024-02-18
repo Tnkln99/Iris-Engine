@@ -4,32 +4,35 @@
 #include "../graphics/Renderers/ForwardRenderer.hpp"
 #include "../graphics/Pipeline.hpp"
 #include "../graphics/Descriptors.hpp"
-#include "../graphics/Objects.hpp"
-
-using namespace iris::graphics;
+#include "../ai/NavigationArea2D.hpp"
 
 
 namespace iris::app{
     class Scene {
     public:
-        explicit Scene(ForwardRenderer& renderer, Window& window);
+        explicit Scene(graphics::ForwardRenderer& renderer, graphics::Window& window);
         ~Scene();
 
         void loadScene();
         void update();
         void draw();
     private:
-        ForwardRenderer& m_rRenderer;
-        Window& m_rWindow;
+        graphics::ForwardRenderer& m_rRenderer;
+        graphics::Window& m_rWindow;
 
         GpuSceneData m_sceneData{};
-        graphics::Camera m_camera{m_rWindow};
+        Camera m_camera{m_rWindow};
         std::vector<RenderObject> m_renderObjects{};
         std::vector<PointLight> m_PointLights{};
+
+        ai::NavigationArea2D m_navigationArea{};
+        RenderObject m_star01{};
 
         // this will stay on scene
         void initObjects();
         void initLights();
+        void drawUi();
+        ai::NavigationTile2D::TileType m_paintType = ai::NavigationTile2D::TileType::WALKABLE;
     };
 }
 

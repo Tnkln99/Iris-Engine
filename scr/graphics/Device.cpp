@@ -378,26 +378,26 @@ namespace iris::graphics{
             exit(1);
         }
 
-        // Flip image vertically
-        int width_in_bytes = texWidth * 4;
-        unsigned char *top = NULL;
-        unsigned char *bottom = NULL;
-        unsigned char temp = 0;
-        int half_height = texHeight / 2;
-
-        for (int row = 0; row < half_height; row++)
-        {
-            top = pixels + row * width_in_bytes;
-            bottom = pixels + (texHeight - row - 1) * width_in_bytes;
-            for (int col = 0; col < width_in_bytes; col++)
-            {
-                temp = *top;
-                *top = *bottom;
-                *bottom = temp;
-                top++;
-                bottom++;
-            }
-        }
+        //// Flip image vertically
+        //int width_in_bytes = texWidth * 4;
+        //unsigned char *top = NULL;
+        //unsigned char *bottom = NULL;
+        //unsigned char temp = 0;
+        //int half_height = texHeight / 2;
+        //
+        //for (int row = 0; row < half_height; row++)
+        //{
+        //    top = pixels + row * width_in_bytes;
+        //    bottom = pixels + (texHeight - row - 1) * width_in_bytes;
+        //    for (int col = 0; col < width_in_bytes; col++)
+        //    {
+        //        temp = *top;
+        //        *top = *bottom;
+        //        *bottom = temp;
+        //        top++;
+        //        bottom++;
+        //    }
+        //}
 
         void* pixel_ptr = pixels;
         VkDeviceSize imageSize = texWidth * texHeight * 4;

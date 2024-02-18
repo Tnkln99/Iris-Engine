@@ -1,11 +1,12 @@
 #include "Objects.hpp"
-#include "Window.hpp"
+#include "../graphics/Window.hpp"
+#include "Scene.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
-namespace iris::graphics{
+namespace iris::app{
 
     glm::mat4 RenderObject::modelMatrix() {
         const float c3 = glm::cos(m_transform.m_rotation.z);
@@ -64,9 +65,10 @@ namespace iris::graphics{
         };
     }
 
+
     ////////////////////////////////////////////////////////////////////////////
 
-    Camera::Camera(Window& window) : m_rWindow{window}{
+    Camera::Camera(graphics::Window& window) : m_rWindow{window}{
         m_transform.m_translation = {0, 0.0f, 60};
         m_viewMatrix = glm::lookAt(m_transform.m_translation,
                                    m_transform.m_translation + m_front,
@@ -94,13 +96,13 @@ namespace iris::graphics{
     }
 
     void Camera::update(float dt) {
-        if (Window::m_sKeyInfo.m_key == GLFW_KEY_D && Window::m_sKeyInfo.m_action != 0){
+        if (graphics::Window::m_sKeyInfo.m_key == GLFW_KEY_D && graphics::Window::m_sKeyInfo.m_action != 0){
             m_transform.m_translation = glm::rotate(
                     m_transform.m_translation,
                     glm::radians(m_speed) * dt,
                     m_up);
         }
-        if (Window::m_sKeyInfo.m_key == GLFW_KEY_A && Window::m_sKeyInfo.m_action != 0){
+        if (graphics::Window::m_sKeyInfo.m_key == GLFW_KEY_A && graphics::Window::m_sKeyInfo.m_action != 0){
             m_transform.m_translation = glm::rotate(
                     m_transform.m_translation,
                     -glm::radians(m_speed) * dt,

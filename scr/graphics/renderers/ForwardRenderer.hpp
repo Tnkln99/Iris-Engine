@@ -24,7 +24,7 @@ namespace iris::graphics{
         void loadRenderer() override;
         void endFrame(VkCommandBuffer cmd) override;
         void postRender() override;
-        void renderScene(std::vector<RenderObject> & renderObjects, GpuSceneData sceneData, Camera & camera) override;
+        void renderScene(VkCommandBuffer cmd, std::vector<app::RenderObject> & renderObjects, app::GpuSceneData sceneData, app::Camera & camera) override;
 
         VkRenderPass getRenderPass(){ return m_renderPass; }
 
