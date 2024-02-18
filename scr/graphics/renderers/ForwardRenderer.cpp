@@ -336,7 +336,7 @@ namespace iris::graphics{
                 "../shaders/Default.frag.spv",
                 pipelineConfig);
 
-        AssetsManager::loadMaterial(m_rDevice, "DefaultMeshNonTextured", defaultPipeline, defaultPipelineLayout);
+        AssetsManager::loadMaterial(m_rDevice, "M_Default", defaultPipeline, defaultPipelineLayout);
 
         // textured pipeline
         VkPipelineLayoutCreateInfo texturedPipelineLayoutCreateInfo = Initializers::createPipelineLayoutInfo();
@@ -368,7 +368,7 @@ namespace iris::graphics{
                 "../shaders/DefaultTextured.frag.spv",
                 texturedPipelineConfigInfo);
 
-        AssetsManager::loadMaterial(m_rDevice, "DefaultMeshTextured", texturedPipeline, texturedPipelineLayout);
+        AssetsManager::loadMaterial(m_rDevice, "M_Textured", texturedPipeline, texturedPipelineLayout);
 
 
 

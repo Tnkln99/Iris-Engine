@@ -44,7 +44,8 @@ void main()
         vec4 lightColor = sceneData.pointLights[i].color;
 
         vec3 directionToLight = lightPos.xyz - fragPosWorld;
-        float attenuation = 1.0f / dot(directionToLight, directionToLight);// distance squared
+        //float attenuation = 1.0f / dot(directionToLight, directionToLight);// distance squared
+        float attenuation = 1.0f;// distance squared
         float cosAngIncidence = dot(surfaceNormal, directionToLight);
         cosAngIncidence = clamp(cosAngIncidence, 0, 1);
 

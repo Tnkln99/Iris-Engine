@@ -69,26 +69,13 @@ namespace iris::graphics{
         }
 
         bool rayIntersectsBox(const glm::vec3& rayOrigin, const glm::vec3& rayDir) {
-            float tMin = 0.0f;
-            float tMax = std::numeric_limits<float>::max();
-            const float EPSILON = 1e-8f; // A small epsilon value to handle floating-point errors
-
-            for (int i = 0; i < 3; ++i) {
-                if (std::abs(rayDir[i]) < EPSILON) {
-                    // Ray is parallel to slab. No hit if origin not within slab
-                    if (rayOrigin[i] < m_minWorld[i] || rayOrigin[i] > m_maxWorld[i]) return false;
-                } else {
-                    float invD = 1.0f / rayDir[i];
-                    float t0 = (m_minWorld[i] - rayOrigin[i]) * invD;
-                    float t1 = (m_maxWorld[i] - rayOrigin[i]) * invD;
-                    if (invD < 0.0f) std::swap(t0, t1);
-                    tMin = std::max(tMin, t0);
-                    tMax = std::min(tMax, t1);
-                    if (tMax <= tMin) return false;
-                }
-            }
-
-            return true;
+            glm::vec3 tMin = (m_minWorld - rayOrigin) / rayDir;
+            glm::vec3 tMax = (m_maxWorld - rayOrigin) / rayDir;
+            glm::vec3 t1 = min(tMin, tMax);
+            glm::vec3 t2 = max(tMin, tMax);
+            float tNear = std::max(std::max(t1.x, t1.y), t1.z);
+            float tFar = std::min(std::min(t2.x, t2.y), t2.z);
+            return tNear <= tFar;
         }
 
         void calculateLocalBounds(Model& model){
@@ -194,7 +181,6 @@ namespace iris::graphics{
         [[nodiscard]] glm::mat4 getProjectionMatrix() const { return m_projectionMatrix; }
         [[nodiscard]] Transform getTransform() const { return m_transform; }
         glm::vec3 getCameraRay(double x, double y);
-        glm::vec3 screenPointToRayOrigin(glm::vec3 rayDir);
 
         Transform m_transform{};
 
@@ -205,7 +191,7 @@ namespace iris::graphics{
     private:
         Window& m_rWindow;
         glm::vec3 m_target = glm::vec3(0.0f, 0.0f, 0.0f);
-        glm::vec3 m_up = glm::vec3(0.0f, -1.0f, 0.0f);
+        glm::vec3 m_up = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 m_front = glm::vec3(0.0f, 0.0f, -1.0f);
 
         float m_speed = 100.0f;

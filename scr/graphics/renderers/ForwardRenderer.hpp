@@ -8,7 +8,6 @@
 #include "../../utilities/Timer.hpp"
 
 
-
 namespace iris::graphics{
     class ForwardRenderer : public Renderer {
     public:
