@@ -40,5 +40,7 @@ namespace iris {
         graphics::AssetsManager::loadTexture(m_device, "T_Target", "../assets/Target.png");
         graphics::AssetsManager::loadTexture(m_device, "T_Man", "../assets/Man.png");
         graphics::AssetsManager::loadTexture(m_device, "T_Walkable", "../assets/Walkable.png");
+        graphics::AssetsManager::loadTexture(m_device, "T_Road", "../assets/Road.png");
+        graphics::AssetsManager::loadTexture(m_device, "T_Explored", "../assets/RoadV2.png");
     }
 }

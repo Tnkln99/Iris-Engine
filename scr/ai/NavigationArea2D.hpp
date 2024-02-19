@@ -12,9 +12,11 @@ namespace iris::ai{
         int m_startTileIndex = -1;
         int m_targetTileIndex = -1;
 
-        void BreadthFirstSearch();
+        void breadthFirstSearch();
+        int m_height = 20;
+        int m_width = 20;
+        std::map<int, std::vector<int>> generateNavigationGrid();
     private:
-        std::map<int, int> generateNavigationGrid();
     };
 }
 

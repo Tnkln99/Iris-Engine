@@ -17,6 +17,12 @@ namespace iris::ai{
             case START:
                 m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Man");
                 break;
+            case ROAD:
+                m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Road");
+                break;
+            case EXPLORED:
+                m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
+                break;
             case NONE:
                 break;
         }

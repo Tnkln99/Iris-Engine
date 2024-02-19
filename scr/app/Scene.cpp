@@ -93,6 +93,8 @@ namespace iris::app{
         graphics::AssetsManager::storeMaterialInstance("MI_Man", m_rRenderer.createMaterialInstance("M_Textured", "T_Man", "T_Man", "T_Man"));
         graphics::AssetsManager::storeMaterialInstance("MI_Target", m_rRenderer.createMaterialInstance("M_Textured", "T_Target", "T_Target", "T_Target"));
         graphics::AssetsManager::storeMaterialInstance("MI_Walkable", m_rRenderer.createMaterialInstance("M_Textured", "T_Walkable", "T_Walkable", "T_Walkable"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Road", m_rRenderer.createMaterialInstance("M_Textured", "T_Road", "T_Road", "T_Road"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Explored", m_rRenderer.createMaterialInstance("M_Textured", "T_Explored", "T_Explored", "T_Explored"));
         graphics::AssetsManager::storeMaterialInstance("MI_Default", m_rRenderer.createMaterialInstance("M_Default"));
 
         //m_star01.setModel(AssetsManager::getModel("Star"));
@@ -125,7 +127,7 @@ namespace iris::app{
         static int item_chosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
 
         // Create a combo box
-        if (ImGui::Combo("Paint", &item_current, items, static_cast<int>(ai::NavigationTile2D::TileType::NONE)))
+        if (ImGui::Combo("Paint", &item_current, items, static_cast<int>(ai::NavigationTile2D::TileType::ROAD)))
         {
             item_chosen = item_current;
             m_paintType = static_cast<ai::NavigationTile2D::TileType>(item_chosen);
@@ -155,9 +157,12 @@ namespace iris::app{
             ImGui::Text("Chosen algo: %s", algos[algoChosen]);
         }
 
-        if (ImGui::Button("Start Simulation")) {
+        if (ImGui::Button("FindPath")) {
             if(m_navigationArea.m_startTileIndex == -1 || m_navigationArea.m_targetTileIndex == -1){
                 ImGui::OpenPopup("my_select_popup");
+            }
+            else{
+                m_navigationArea.breadthFirstSearch();
             }
         }
 

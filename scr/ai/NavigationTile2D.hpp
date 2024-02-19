@@ -11,10 +11,13 @@ namespace iris::ai{
             OBSTACLE,
             TARGET,
             START,
+            ROAD,
+            EXPLORED,
             NONE
         };
         int m_index;
         void changeType(TileType type);
+        TileType getType() const { return m_type; }
     private:
         TileType m_type;
     };
