@@ -1,3 +1,4 @@
+#include <queue>
 #include "NavigationArea2D.hpp"
 #include "../graphics/AssetsManager.hpp"
 
@@ -31,31 +32,21 @@ namespace iris::ai{
         frontier.push(m_startTileIndex);
 
         while(!frontier.empty()){
-            bool found = false;
-            exploreBreadthFirstSearch(grid, cameFrom, frontier);
+            int current = frontier.front();
+            frontier.pop();
+            if (current == m_targetTileIndex) {
+                break;
+            }
+            for(auto& next : grid[current]){
+                if(cameFrom.find(next) == cameFrom.end()){
+                    frontier.push(next);
+                    cameFrom.insert(std::pair<int, int> (next, current));
+                }
+            }
         }
 
         drawExploredAndPath(cameFrom);
     }
-
-    void
-    NavigationArea2D::exploreBreadthFirstSearch(std::map<int, std::vector<int>>& grid,
-                                                std::unordered_map<int, int> &cameFrom,
-                                                std::queue<int> &frontier, bool &found) {
-        int current = frontier.front();
-        frontier.pop();
-        if (current == m_targetTileIndex) {
-            found = true;
-            return;
-        }
-        for(auto& next : grid[current]){
-            if(cameFrom.find(next) == cameFrom.end()){
-                frontier.push(next);
-                cameFrom.insert(std::pair<int, int> (next, current));
-            }
-        }
-    }
-
 
     void NavigationArea2D::dijkstra(int bushWeight) {
         auto grid = generateNavigationGrid();

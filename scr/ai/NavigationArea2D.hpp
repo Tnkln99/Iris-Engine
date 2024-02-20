@@ -14,10 +14,6 @@ namespace iris::ai{
         int m_targetTileIndex = -1;
 
         void breadthFirstSearch();
-        void exploreBreadthFirstSearch(std::map<int, std::vector<int>>& grid,
-                                       std::unordered_map<int, int>& cameFrom,
-                                       std::queue<int>& frontier, bool& found);
-
         void dijkstra(int bushWeight);
         void greedyBestFirstSearch();
         void aStar(int bushWeight);
