@@ -1,4 +1,3 @@
-#include <queue>
 #include "NavigationArea2D.hpp"
 #include "../graphics/AssetsManager.hpp"
 
@@ -32,49 +31,121 @@ namespace iris::ai{
         frontier.push(m_startTileIndex);
 
         while(!frontier.empty()){
-            int current = frontier.front();
+            bool found = false;
+            exploreBreadthFirstSearch(grid, cameFrom, frontier);
+        }
+
+        drawExploredAndPath(cameFrom);
+    }
+
+    void
+    NavigationArea2D::exploreBreadthFirstSearch(std::map<int, std::vector<int>>& grid,
+                                                std::unordered_map<int, int> &cameFrom,
+                                                std::queue<int> &frontier, bool &found) {
+        int current = frontier.front();
+        frontier.pop();
+        if (current == m_targetTileIndex) {
+            found = true;
+            return;
+        }
+        for(auto& next : grid[current]){
+            if(cameFrom.find(next) == cameFrom.end()){
+                frontier.push(next);
+                cameFrom.insert(std::pair<int, int> (next, current));
+            }
+        }
+    }
+
+
+    void NavigationArea2D::dijkstra(int bushWeight) {
+        auto grid = generateNavigationGrid();
+        std::unordered_map<int, int> cameFrom{};
+        std::unordered_map<int, double> costSoFar{};
+        cameFrom[m_startTileIndex] = m_startTileIndex;
+        costSoFar[m_startTileIndex] = 0;
+
+        typedef std::pair<double, int> costToIndex;
+        std::priority_queue<costToIndex, std::vector<costToIndex>, std::greater<>> frontier;
+        frontier.emplace(0, m_startTileIndex);
+
+        while (!frontier.empty()) {
+            int current = frontier.top().second;
             frontier.pop();
+
             if (current == m_targetTileIndex) {
                 break;
             }
-            for(auto& next : grid[current]){
-                if(cameFrom.find(next) == cameFrom.end()){
-                    frontier.push(next);
-                    cameFrom.insert(std::pair<int, int> (next, current));
+
+            for (auto& neighbor : grid[current]) {
+                double newCost = costSoFar[current] + cost(neighbor, bushWeight);
+                if (costSoFar.find(neighbor) == costSoFar.end() || newCost < costSoFar[neighbor]) {
+                    costSoFar[neighbor] = newCost;
+                    cameFrom[neighbor] = current;
+                    frontier.emplace(newCost, neighbor);
                 }
             }
         }
 
-        for(auto it = cameFrom.begin(); it != cameFrom.end(); it++){
-            if(it->first == m_startTileIndex){
-                continue;
+
+        drawExploredAndPath(cameFrom);
+    }
+
+    void NavigationArea2D::greedyBestFirstSearch() {
+        auto grid = generateNavigationGrid();
+        std::unordered_map<int, int> cameFrom{};
+        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> frontier;
+        frontier.emplace(0, m_startTileIndex);
+        cameFrom[m_startTileIndex] = m_startTileIndex;
+
+        while (!frontier.empty()) {
+            int current = frontier.top().second;
+            frontier.pop();
+
+            if (current == m_targetTileIndex) {
+                break;
             }
-            if(it->first == m_targetTileIndex){
-                continue;
+
+            for (auto& next : grid[current]) {
+                if (cameFrom.find(next) == cameFrom.end()) {
+                    int priority = heuristic(next, m_targetTileIndex);
+                    frontier.emplace(priority, next);
+                    cameFrom[next] = current;
+                }
             }
-            m_tiles[it->first].changeType(NavigationTile2D::TileType::EXPLORED);
         }
 
-        std::vector<int> path;
-        int current = m_targetTileIndex;
-        path.push_back(current);
+        drawExploredAndPath(cameFrom);
+    }
 
-        while(current != m_startTileIndex) {
-            current = cameFrom[current];
-            path.push_back(current);
+    void NavigationArea2D::aStar(int bushWeight) {
+        auto grid = generateNavigationGrid();
+        std::unordered_map<int, int> cameFrom{};
+        std::unordered_map<int, double> costSoFar{};
+        std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<>> frontier;
+        frontier.emplace(0, m_startTileIndex);
+        cameFrom[m_startTileIndex] = m_startTileIndex;
+        costSoFar[m_startTileIndex] = 0;
+
+        while (!frontier.empty()) {
+            int current = frontier.top().second;
+            frontier.pop();
+
+            if (current == m_targetTileIndex) {
+                break;
+            }
+
+            for (auto& next : grid[current]) {
+                double newCost = costSoFar[current] + cost(next, bushWeight);
+                if (costSoFar.find(next) == costSoFar.end() || newCost < costSoFar[next]) {
+                    costSoFar[next] = newCost;
+                    int priority = newCost + heuristic(next, m_targetTileIndex);
+                    frontier.emplace(priority, next);
+                    cameFrom[next] = current;
+                }
+            }
         }
 
-        // The path vector now contains the indices from target to start, in reverse order
-        // To print them in order from start to target, reverse the vector or iterate in reverse
-        for(auto it = path.rbegin(); it != path.rend(); ++it) {
-            if(*it == m_startTileIndex){
-                continue;
-            }
-            if(*it == m_targetTileIndex){
-                continue;
-            }
-            m_tiles[*it].changeType(NavigationTile2D::TileType::ROAD);
-        }
+        drawExploredAndPath(cameFrom);
     }
 
     std::map<int, std::vector<int>> NavigationArea2D::generateNavigationGrid() {
@@ -109,5 +180,68 @@ namespace iris::ai{
             grid.insert(std::pair<int, std::vector<int>> (tile.first, neighbours));
         }
         return grid;
+    }
+
+    void NavigationArea2D::resetPath() {
+        for(auto & tile : m_tiles){
+            if(tile.second.getType() == ai::NavigationTile2D::TileType::ROAD || tile.second.getType() == ai::NavigationTile2D::TileType::EXPLORED){
+                tile.second.changeType(ai::NavigationTile2D::TileType::WALKABLE);
+            }
+            else if(tile.second.getType() == ai::NavigationTile2D::TileType::EXPLORED_BUSH || tile.second.getType() == ai::NavigationTile2D::TileType::ROAD_BUSH){
+                tile.second.changeType(ai::NavigationTile2D::TileType::BUSH);
+            }
+        }
+    }
+
+    void NavigationArea2D::drawExploredAndPath(std::unordered_map<int, int> cameFrom) {
+        for(auto it = cameFrom.begin(); it != cameFrom.end(); it++){
+            if(it->first == m_startTileIndex){
+                continue;
+            }
+            if(it->first == m_targetTileIndex){
+                continue;
+            }
+            if(m_tiles[it->first].getType() == NavigationTile2D::TileType::BUSH){
+                m_tiles[it->first].changeType(NavigationTile2D::TileType::EXPLORED_BUSH);
+            }
+            else{
+                m_tiles[it->first].changeType(NavigationTile2D::TileType::EXPLORED);
+            }
+        }
+
+        std::vector<int> path;
+        int current = m_targetTileIndex;
+        path.push_back(current);
+
+        while(current != m_startTileIndex) {
+            current = cameFrom[current];
+            path.push_back(current);
+        }
+
+        // The path vector now contains the indices from target to start, in reverse order
+        // To print them in order from start to target, reverse the vector or iterate in reverse
+        for(auto it = path.rbegin(); it != path.rend(); ++it) {
+            if(*it == m_startTileIndex){
+                continue;
+            }
+            if(*it == m_targetTileIndex){
+                continue;
+            }
+            if(m_tiles[*it].getType() == NavigationTile2D::TileType::EXPLORED_BUSH){
+                m_tiles[*it].changeType(NavigationTile2D::TileType::ROAD_BUSH);
+            }
+            else{
+                m_tiles[*it].changeType(NavigationTile2D::TileType::ROAD);
+            }
+
+        }
+    }
+
+    float NavigationArea2D::heuristic(int a, int b) const {
+        int x1 = a % m_width;
+        int y1 = a / m_height;
+        int x2 = b % m_width;
+        int y2 = b / m_height;
+        return std::abs(x1 - x2) + std::abs(y1 - y2);
     }
 }

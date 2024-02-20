@@ -1,8 +1,9 @@
 #ifndef IRIS_NAVIGATIONAREA2D_HPP
 #define IRIS_NAVIGATIONAREA2D_HPP
 
-#include <map>
 #include "NavigationTile2D.hpp"
+#include <map>
+#include <queue>
 
 namespace iris::ai{
     class NavigationArea2D {
@@ -13,10 +14,26 @@ namespace iris::ai{
         int m_targetTileIndex = -1;
 
         void breadthFirstSearch();
+        void exploreBreadthFirstSearch(std::map<int, std::vector<int>>& grid,
+                                       std::unordered_map<int, int>& cameFrom,
+                                       std::queue<int>& frontier, bool& found);
+
+        void dijkstra(int bushWeight);
+        void greedyBestFirstSearch();
+        void aStar(int bushWeight);
+
+
+        void resetPath();
         int m_height = 20;
         int m_width = 20;
-        std::map<int, std::vector<int>> generateNavigationGrid();
     private:
+        std::map<int, std::vector<int>> generateNavigationGrid();
+        [[nodiscard]] int cost(int to, int bushCost) const {
+            return m_tiles.find(to)->second.getType() == NavigationTile2D::TileType::BUSH ? bushCost : 1;
+        }
+
+        void drawExploredAndPath(std::unordered_map<int, int> cameFrom);
+        float heuristic(int a, int b) const;
     };
 }
 

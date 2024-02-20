@@ -8,11 +8,14 @@ namespace iris::ai{
     public:
         enum TileType{
             WALKABLE,
+            BUSH,
             OBSTACLE,
             TARGET,
             START,
             ROAD,
             EXPLORED,
+            EXPLORED_BUSH,
+            ROAD_BUSH,
             NONE
         };
         int m_index;

@@ -25,10 +25,12 @@ namespace iris::app{
         double mouseX = graphics::Window::m_sMouseInfo.m_xPos;
         double mouseY = graphics::Window::m_sMouseInfo.m_yPos;
         auto rayDir = glm::normalize(glm::vec3(m_camera.getCameraRay(mouseX, mouseY)));
+        // mouse button logic
         for(auto & tile : m_navigationArea.m_tiles){
             tile.second.updateInfo();
             tile.second.getBoundingBox().update(utils::Timer::getDeltaTime(), tile.second.modelMatrix());
-            if ( tile.second.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir) && !io.WantCaptureMouse){
+            if ( tile.second.getBoundingBox().rayIntersectsBox(m_camera.m_transform.m_translation, rayDir)
+                    && !io.WantCaptureMouse && m_paintType != ai::NavigationTile2D::TileType::NONE){
                 tile.second.getBoundingBox().m_show = true;
                 if(graphics::Window::m_sMouseInfo.m_isLeftButtonPressedLastFrame){
                     if (m_navigationArea.m_startTileIndex == tile.first)
@@ -95,6 +97,9 @@ namespace iris::app{
         graphics::AssetsManager::storeMaterialInstance("MI_Walkable", m_rRenderer.createMaterialInstance("M_Textured", "T_Walkable", "T_Walkable", "T_Walkable"));
         graphics::AssetsManager::storeMaterialInstance("MI_Road", m_rRenderer.createMaterialInstance("M_Textured", "T_Road", "T_Road", "T_Road"));
         graphics::AssetsManager::storeMaterialInstance("MI_Explored", m_rRenderer.createMaterialInstance("M_Textured", "T_Explored", "T_Explored", "T_Explored"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Bush", m_rRenderer.createMaterialInstance("M_Textured", "T_Bush", "T_Bush", "T_Bush"));
+        graphics::AssetsManager::storeMaterialInstance("MI_ExploredBush", m_rRenderer.createMaterialInstance("M_Textured", "T_ExploredBush", "T_ExploredBush", "T_ExploredBush"));
+        graphics::AssetsManager::storeMaterialInstance("MI_RoadBush", m_rRenderer.createMaterialInstance("M_Textured", "T_RoadBush", "T_RoadBush", "T_RoadBush"));
         graphics::AssetsManager::storeMaterialInstance("MI_Default", m_rRenderer.createMaterialInstance("M_Default"));
 
         //m_star01.setModel(AssetsManager::getModel("Star"));
@@ -106,13 +111,13 @@ namespace iris::app{
     }
 
     void Scene::initLights() {
-        m_PointLights.emplace_back(glm::vec3(0,0,1), glm::vec4(1,1,1,1));
-        m_PointLights.emplace_back(glm::vec3(-10,0,1), glm::vec4(1,1,1,1));
-        m_PointLights.emplace_back(glm::vec3(10,0,1), glm::vec4(1,1,1,1));
-        m_PointLights.emplace_back(glm::vec3(10,-10,1), glm::vec4(1,1,1,1));
-        m_PointLights.emplace_back(glm::vec3(10,10,1), glm::vec4(1,1,1,1));
-        m_PointLights.emplace_back(glm::vec3(-10,-10,1), glm::vec4(1,1,1,1));
-        m_PointLights.emplace_back(glm::vec3(-10,10,1), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(0,0,1.0), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(-10,0,1.0), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(10,0,1.0), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(10,-10,1.0), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(10,10,1.0), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(-10,-10,1.0), glm::vec4(1,1,1,1));
+        m_PointLights.emplace_back(glm::vec3(-10,10,1.0), glm::vec4(1,1,1,1));
         for(int i = 0; i < m_PointLights.size(); i++){
             m_sceneData.m_lights[i] = m_PointLights[i].m_gpuLightData;
         }
@@ -120,60 +125,102 @@ namespace iris::app{
     }
 
     void Scene::drawUi() {
-
+        static bool isSettings = true; // Flag to track which content to show
         ImGui::Begin("Settings");
-        const char* items[] = { "Walkable", "Obstacle", "Target", "Start" };
-        static int item_current = 0; // Current item index
-        static int item_chosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
+        static int currentPaint = 0; // Current item index
+        if(isSettings){
+            const char* paints[] = { "Walkable", "Bush", "Obstacle", "Target", "Start" };
+            static int chosenPaint = 0; // Variable to store the chosen item, -1 means no item chosen yet
 
-        // Create a combo box
-        if (ImGui::Combo("Paint", &item_current, items, static_cast<int>(ai::NavigationTile2D::TileType::ROAD)))
-        {
-            item_chosen = item_current;
-            m_paintType = static_cast<ai::NavigationTile2D::TileType>(item_chosen);
-        }
-
-        // Optionally, display the chosen item
-        if (item_chosen != -1)
-        {
-            ImGui::Text("Chosen paint: %s", items[item_chosen]);
-        }
-
-
-        const char* algos[] = { "Breadth First Search"};
-        static int currenAlgo = 0; // Current item index
-        static int algoChosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
-
-        // Create a combo box
-        if (ImGui::Combo("Algorithmes", &currenAlgo, algos, IM_ARRAYSIZE(algos)))
-        {
-            // Item selection logic can be handled here if needed
-            algoChosen = currenAlgo;
-        }
-
-        // Optionally, display the chosen item
-        if (algoChosen != -1)
-        {
-            ImGui::Text("Chosen algo: %s", algos[algoChosen]);
-        }
-
-        if (ImGui::Button("FindPath")) {
-            if(m_navigationArea.m_startTileIndex == -1 || m_navigationArea.m_targetTileIndex == -1){
-                ImGui::OpenPopup("my_select_popup");
+            // Create a combo box
+            if (ImGui::Combo("Paint", &currentPaint, paints, static_cast<int>(ai::NavigationTile2D::TileType::ROAD)))
+            {
+                chosenPaint = currentPaint;
+                m_paintType = static_cast<ai::NavigationTile2D::TileType>(chosenPaint);
             }
-            else{
-                m_navigationArea.breadthFirstSearch();
-            }
-        }
 
-        if (ImGui::BeginPopup("my_select_popup"))
-        {
-            ImGui::Text("The required condition was not met.");
-            // Close button inside the popup
-            if (ImGui::Button("Close")) {
-                ImGui::CloseCurrentPopup();
+            // Optionally, display the chosen item
+            if (chosenPaint != -1)
+            {
+                ImGui::Text("Chosen paint: %s", paints[chosenPaint]);
             }
-            ImGui::EndPopup();
+
+
+            const char* algos[] = { "Breadth First Search", "Dijkstra’s Algorithm", "Greedy Best First Search", "A* Search" };
+            static int currenAlgo = 0; // Current item index
+            static int algoChosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
+
+            // Create a combo box
+            if (ImGui::Combo("Algorithmes", &currenAlgo, algos, IM_ARRAYSIZE(algos)))
+            {
+                // Item selection logic can be handled here if needed
+                algoChosen = currenAlgo;
+            }
+
+            static int bushMovementCost = 2;
+
+            // Optionally, display the chosen item
+            if (algoChosen != -1)
+            {
+                ImGui::Text("Chosen algo: %s", algos[algoChosen]);
+                if (algoChosen == 1 || algoChosen == 3){
+                    // Display the text
+                    ImGui::Text("Considering movement cost of normal terrain is 1, movement cost of bushes are:");
+
+                    // Integer input for the bush movement cost
+                    ImGui::InputInt("Bushes Movement Cost", &bushMovementCost);
+                    if (bushMovementCost <= 1) {
+                        bushMovementCost = 2;
+                    }
+                }
+            }
+
+            if (ImGui::Button("FindPath"))
+            {
+                if(m_navigationArea.m_startTileIndex == -1 || m_navigationArea.m_targetTileIndex == -1){
+                    ImGui::OpenPopup("my_select_popup");
+                }
+                else if (algoChosen == 0){
+                    m_navigationArea.breadthFirstSearch();
+                    m_paintType = ai::NavigationTile2D::TileType::NONE;
+                    isSettings = false;
+                }
+                else if (algoChosen == 1){
+                    m_navigationArea.dijkstra(bushMovementCost);
+                    m_paintType = ai::NavigationTile2D::TileType::NONE;
+                    isSettings = false;
+                }
+                else if (algoChosen == 2){
+                    m_navigationArea.greedyBestFirstSearch();
+                    m_paintType = ai::NavigationTile2D::TileType::NONE;
+                    isSettings = false;
+                }
+                else if (algoChosen == 3){
+                    m_navigationArea.aStar(bushMovementCost);
+                    m_paintType = ai::NavigationTile2D::TileType::NONE;
+                    isSettings = false;
+                }
+            }
+
+            if (ImGui::BeginPopup("my_select_popup"))
+            {
+                ImGui::Text("You should choose a start and target tile to find a path.");
+                // Close button inside the popup
+                if (ImGui::Button("Close")) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+
+
+        }
+        else{
+            if(ImGui::Button("Reset")){
+                m_navigationArea.resetPath();
+                m_paintType = ai::NavigationTile2D::TileType::WALKABLE;
+                currentPaint = 0;
+                isSettings = true;
+            }
         }
 
         ImGui::End();
