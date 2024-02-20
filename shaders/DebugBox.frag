@@ -20,5 +20,5 @@ layout(push_constant) uniform Push{
 } push;
 
 void main() {
-    outColor = vec4(0.0, 0.0, 1.0, 1.0); // White color
+    outColor = vec4(0.0, 0.0, 1.0, 1.0); // blue color
 }

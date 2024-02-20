@@ -14,7 +14,9 @@ namespace iris::ai{
         int m_targetTileIndex = -1;
 
         void breadthFirstSearch();
+
         void dijkstra(int bushWeight);
+
         void greedyBestFirstSearch();
         void aStar(int bushWeight);
 
@@ -22,8 +24,8 @@ namespace iris::ai{
         void resetPath();
         int m_height = 20;
         int m_width = 20;
-    private:
         std::map<int, std::vector<int>> generateNavigationGrid();
+    private:
         [[nodiscard]] int cost(int to, int bushCost) const {
             return m_tiles.find(to)->second.getType() == NavigationTile2D::TileType::BUSH ? bushCost : 1;
         }

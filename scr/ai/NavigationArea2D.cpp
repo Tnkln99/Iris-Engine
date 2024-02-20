@@ -5,6 +5,8 @@
 namespace iris::ai{
 
     void NavigationArea2D::loadArea() {
+        m_startTileIndex = 0;
+        m_targetTileIndex = m_height * m_width - 1;
         int id = 0;
         float yOffset = -20.0f;
         for(int i = 0; i < m_height; i++){
@@ -15,7 +17,15 @@ namespace iris::ai{
                 square.m_transform.m_translation = {xOffset, yOffset, 0.0f};
                 square.m_transform.m_scale = {1.0f, 1.0f, 1.0f};
                 square.m_index = id;
-                square.changeType(NavigationTile2D::TileType::WALKABLE);
+                if (id == m_startTileIndex){
+                    square.changeType(NavigationTile2D::TileType::START);
+                }
+                else if (id == m_targetTileIndex){
+                    square.changeType(NavigationTile2D::TileType::TARGET);
+                }
+                else{
+                    square.changeType(NavigationTile2D::TileType::WALKABLE);
+                }
                 m_tiles.insert(std::pair<int, NavigationTile2D> (id, square));
                 xOffset += 2.0f;
                 id++;
@@ -44,6 +54,8 @@ namespace iris::ai{
                 }
             }
         }
+
+
 
         drawExploredAndPath(cameFrom);
     }
@@ -84,7 +96,8 @@ namespace iris::ai{
     void NavigationArea2D::greedyBestFirstSearch() {
         auto grid = generateNavigationGrid();
         std::unordered_map<int, int> cameFrom{};
-        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> frontier;
+        std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>,
+                std::greater<>> frontier;
         frontier.emplace(0, m_startTileIndex);
         cameFrom[m_startTileIndex] = m_startTileIndex;
 
@@ -98,7 +111,7 @@ namespace iris::ai{
 
             for (auto& next : grid[current]) {
                 if (cameFrom.find(next) == cameFrom.end()) {
-                    int priority = heuristic(next, m_targetTileIndex);
+                    float priority = heuristic(next, m_targetTileIndex);
                     frontier.emplace(priority, next);
                     cameFrom[next] = current;
                 }
@@ -112,7 +125,7 @@ namespace iris::ai{
         auto grid = generateNavigationGrid();
         std::unordered_map<int, int> cameFrom{};
         std::unordered_map<int, double> costSoFar{};
-        std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<>> frontier;
+        std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, std::greater<>> frontier;
         frontier.emplace(0, m_startTileIndex);
         cameFrom[m_startTileIndex] = m_startTileIndex;
         costSoFar[m_startTileIndex] = 0;
@@ -195,9 +208,14 @@ namespace iris::ai{
             if(m_tiles[it->first].getType() == NavigationTile2D::TileType::BUSH){
                 m_tiles[it->first].changeType(NavigationTile2D::TileType::EXPLORED_BUSH);
             }
-            else{
+            else if (m_tiles[it->first].getType() != NavigationTile2D::TileType::EXPLORED_BUSH
+                    && m_tiles[it->first].getType() != NavigationTile2D::TileType::ROAD_BUSH){
                 m_tiles[it->first].changeType(NavigationTile2D::TileType::EXPLORED);
             }
+        }
+
+        if(cameFrom.find(m_targetTileIndex) == cameFrom.end()){
+            return;
         }
 
         std::vector<int> path;
@@ -221,7 +239,8 @@ namespace iris::ai{
             if(m_tiles[*it].getType() == NavigationTile2D::TileType::EXPLORED_BUSH){
                 m_tiles[*it].changeType(NavigationTile2D::TileType::ROAD_BUSH);
             }
-            else{
+            else if (m_tiles[*it].getType() != NavigationTile2D::TileType::EXPLORED_BUSH
+                     && m_tiles[*it].getType() != NavigationTile2D::TileType::ROAD_BUSH){
                 m_tiles[*it].changeType(NavigationTile2D::TileType::ROAD);
             }
 
@@ -229,10 +248,6 @@ namespace iris::ai{
     }
 
     float NavigationArea2D::heuristic(int a, int b) const {
-        int x1 = a % m_width;
-        int y1 = a / m_height;
-        int x2 = b % m_width;
-        int y2 = b / m_height;
-        return std::abs(x1 - x2) + std::abs(y1 - y2);
+        return glm::distance(m_tiles.find(a)->second.m_transform.m_translation ,m_tiles.find(b)->second.m_transform.m_translation);
     }
 }

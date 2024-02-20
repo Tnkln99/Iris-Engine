@@ -16,7 +16,7 @@ namespace iris {
 
         void run();
     private:
-        graphics::Window m_window{800, 800, "Iris Engine"};
+        graphics::Window m_window{1000, 1000, "Iris Engine"};
         graphics::Device m_device{m_window};
         graphics::ForwardRenderer m_renderer{m_device, m_window};
 

@@ -125,102 +125,105 @@ namespace iris::app{
     }
 
     void Scene::drawUi() {
-        static bool isSettings = true; // Flag to track which content to show
-        ImGui::Begin("Settings");
+        static enum { ShowPath, ShowSettings } currentTab = ShowSettings;
+        ImGui::SetNextWindowSize(ImVec2(0, 0)); // Suggests ImGui to auto-fit the window size
+        ImGui::Begin("Menu");
         static int currentPaint = 0; // Current item index
-        if(isSettings){
-            const char* paints[] = { "Walkable", "Bush", "Obstacle", "Target", "Start" };
-            static int chosenPaint = 0; // Variable to store the chosen item, -1 means no item chosen yet
+        static int algoChosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
+        static int bushMovementCost = 2;
 
-            // Create a combo box
-            if (ImGui::Combo("Paint", &currentPaint, paints, static_cast<int>(ai::NavigationTile2D::TileType::ROAD)))
+        switch (currentTab) {
+            case ShowPath:
+                if(ImGui::Button("Reset")){
+                    m_navigationArea.resetPath();
+                    m_paintType = ai::NavigationTile2D::TileType::WALKABLE;
+                    currentPaint = 0;
+                    currentTab = ShowSettings;
+                }
+                break;
+            case ShowSettings:
             {
-                chosenPaint = currentPaint;
-                m_paintType = static_cast<ai::NavigationTile2D::TileType>(chosenPaint);
-            }
+                const char* paints[] = { "Walkable", "Bush", "Obstacle", "Target", "Start" };
+                static int chosenPaint = 0; // Variable to store the chosen item, -1 means no item chosen yet
 
-            // Optionally, display the chosen item
-            if (chosenPaint != -1)
-            {
-                ImGui::Text("Chosen paint: %s", paints[chosenPaint]);
-            }
+                // Create a combo box
+                if (ImGui::Combo("Paint", &currentPaint, paints, static_cast<int>(ai::NavigationTile2D::TileType::ROAD)))
+                {
+                    chosenPaint = currentPaint;
+                    m_paintType = static_cast<ai::NavigationTile2D::TileType>(chosenPaint);
+                }
+
+                // Optionally, display the chosen item
+                if (chosenPaint != -1)
+                {
+                    ImGui::Text("Chosen paint: %s", paints[chosenPaint]);
+                }
 
 
-            const char* algos[] = { "Breadth First Search", "Dijkstra’s Algorithm", "Greedy Best First Search", "A* Search" };
-            static int currenAlgo = 0; // Current item index
-            static int algoChosen = 0; // Variable to store the chosen item, -1 means no item chosen yet
+                const char* algos[] = { "Breadth First Search", "Dijkstra’s Algorithm", "Greedy Best First Search", "A* Search" };
+                static int currenAlgo = 0; // Current item index
 
-            // Create a combo box
-            if (ImGui::Combo("Algorithmes", &currenAlgo, algos, IM_ARRAYSIZE(algos)))
-            {
-                // Item selection logic can be handled here if needed
-                algoChosen = currenAlgo;
-            }
+                // Create a combo box
+                if (ImGui::Combo("Algorithmes", &currenAlgo, algos, IM_ARRAYSIZE(algos)))
+                {
+                    // Item selection logic can be handled here if needed
+                    algoChosen = currenAlgo;
+                }
 
-            static int bushMovementCost = 2;
+                // Optionally, display the chosen item
+                if (algoChosen != -1)
+                {
+                    ImGui::Text("Chosen algo: %s", algos[algoChosen]);
+                    if (algoChosen == 1 || algoChosen == 3){
+                        // Display the text
+                        ImGui::Text("Considering movement cost of normal terrain is 1, movement cost of bushes are:");
 
-            // Optionally, display the chosen item
-            if (algoChosen != -1)
-            {
-                ImGui::Text("Chosen algo: %s", algos[algoChosen]);
-                if (algoChosen == 1 || algoChosen == 3){
-                    // Display the text
-                    ImGui::Text("Considering movement cost of normal terrain is 1, movement cost of bushes are:");
-
-                    // Integer input for the bush movement cost
-                    ImGui::InputInt("Bushes Movement Cost", &bushMovementCost);
-                    if (bushMovementCost <= 1) {
-                        bushMovementCost = 2;
+                        // Integer input for the bush movement cost
+                        ImGui::InputInt("Bushes Movement Cost", &bushMovementCost);
+                        if (bushMovementCost <= 1) {
+                            bushMovementCost = 2;
+                        }
                     }
                 }
-            }
 
-            if (ImGui::Button("FindPath"))
-            {
-                if(m_navigationArea.m_startTileIndex == -1 || m_navigationArea.m_targetTileIndex == -1){
-                    ImGui::OpenPopup("my_select_popup");
+                if (ImGui::Button("FindPath"))
+                {
+                    if(m_navigationArea.m_startTileIndex == -1 || m_navigationArea.m_targetTileIndex == -1){
+                        ImGui::OpenPopup("MustChosePopUp");
+                    }
+                    else if (algoChosen == 0){
+                        m_navigationArea.breadthFirstSearch();
+                        m_paintType = ai::NavigationTile2D::TileType::NONE;
+                        currentTab = ShowPath;
+                    }
+                    else if (algoChosen == 1){
+                        m_navigationArea.dijkstra(bushMovementCost);
+                        m_paintType = ai::NavigationTile2D::TileType::NONE;
+                        currentTab = ShowPath;
+                    }
+                    else if (algoChosen == 2){
+                        m_navigationArea.greedyBestFirstSearch();
+                        m_paintType = ai::NavigationTile2D::TileType::NONE;
+                        currentTab = ShowPath;
+                    }
+                    else if (algoChosen == 3){
+                        m_navigationArea.aStar(bushMovementCost);
+                        m_paintType = ai::NavigationTile2D::TileType::NONE;
+                        currentTab = ShowPath;
+                    }
                 }
-                else if (algoChosen == 0){
-                    m_navigationArea.breadthFirstSearch();
-                    m_paintType = ai::NavigationTile2D::TileType::NONE;
-                    isSettings = false;
-                }
-                else if (algoChosen == 1){
-                    m_navigationArea.dijkstra(bushMovementCost);
-                    m_paintType = ai::NavigationTile2D::TileType::NONE;
-                    isSettings = false;
-                }
-                else if (algoChosen == 2){
-                    m_navigationArea.greedyBestFirstSearch();
-                    m_paintType = ai::NavigationTile2D::TileType::NONE;
-                    isSettings = false;
-                }
-                else if (algoChosen == 3){
-                    m_navigationArea.aStar(bushMovementCost);
-                    m_paintType = ai::NavigationTile2D::TileType::NONE;
-                    isSettings = false;
+
+                if (ImGui::BeginPopup("MustChoosePopUp"))
+                {
+                    ImGui::Text("You should choose a start and target tile to find a path.");
+                    // Close button inside the popup
+                    if (ImGui::Button("Close")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
                 }
             }
-
-            if (ImGui::BeginPopup("my_select_popup"))
-            {
-                ImGui::Text("You should choose a start and target tile to find a path.");
-                // Close button inside the popup
-                if (ImGui::Button("Close")) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
-
-
-        }
-        else{
-            if(ImGui::Button("Reset")){
-                m_navigationArea.resetPath();
-                m_paintType = ai::NavigationTile2D::TileType::WALKABLE;
-                currentPaint = 0;
-                isSettings = true;
-            }
+            break;
         }
 
         ImGui::End();
