@@ -30,6 +30,7 @@ namespace iris {
         graphics::AssetsManager::loadModel(m_device, "Star", "../assets/star/Star.obj");
         graphics::AssetsManager::loadModel(m_device, "Plane", "../assets/plane/Plane.obj");
         graphics::AssetsManager::loadModel(m_device, "Square", "../assets/Square.obj");
+        graphics::AssetsManager::loadModel(m_device, "Cube", "../assets/Cube.obj");
     }
 
     void Engine::loadImages() {
@@ -45,5 +46,6 @@ namespace iris {
         graphics::AssetsManager::loadTexture(m_device, "T_Bush", "../assets/Bush.png");
         graphics::AssetsManager::loadTexture(m_device, "T_ExploredBush", "../assets/ExploredBush.png");
         graphics::AssetsManager::loadTexture(m_device, "T_RoadBush", "../assets/RoadBush.png");
+        graphics::AssetsManager::loadTexture(m_device, "T_Red", "../assets/Red.jpg");
     }
 }

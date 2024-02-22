@@ -1,11 +1,8 @@
 #ifndef IRIS_SCENE_HPP
 #define IRIS_SCENE_HPP
 
-#include "../graphics/Renderers/ForwardRenderer.hpp"
+#include "../graphics/renderers/ForwardRenderer.hpp"
 #include "../graphics/Pipeline.hpp"
-#include "../graphics/Descriptors.hpp"
-#include "../ai/NavigationArea2D.hpp"
-
 
 namespace iris::app{
     class Scene {
@@ -13,29 +10,23 @@ namespace iris::app{
         explicit Scene(graphics::ForwardRenderer& renderer, graphics::Window& window);
         ~Scene();
 
-        void loadScene();
-        void update();
-        void draw();
-    private:
+        virtual void loadScene() = 0;
+        virtual void update() = 0;
+        virtual void draw() = 0;
+    protected:
         graphics::ForwardRenderer& m_rRenderer;
         graphics::Window& m_rWindow;
 
-        GpuSceneData m_sceneData{};
-        Camera m_camera{m_rWindow};
-        std::vector<RenderObject> m_renderObjects{};
-        std::vector<PointLight> m_PointLights{};
+        app::GpuSceneData m_sceneData{};
+        app::Camera m_camera{m_rWindow};
+        std::vector<app::RenderObject> m_renderObjects{};
+        std::vector<app::PointLight> m_PointLights{};
 
-        ai::NavigationArea2D m_navigationArea{};
-        RenderObject m_star01{};
 
-        // this will stay on scene
-        void initObjects();
-        void initLights();
-        void drawUi();
-        ai::NavigationTile2D::TileType m_paintType = ai::NavigationTile2D::TileType::WALKABLE;
+        virtual void initObjects() = 0;
+        virtual void initLights() = 0;
+        virtual void drawUi() = 0;
     };
 }
-
-
 
 #endif //IRIS_SCENE_HPP

@@ -3,7 +3,8 @@
 
 #include "graphics/Device.hpp"
 #include "graphics/Renderers/ForwardRenderer.hpp"
-#include "app/Scene.hpp"
+#include "scenes/Scene2DNav.hpp"
+#include "scenes/Scene3DNav.hpp"
 
 namespace iris {
     class Engine {
@@ -20,7 +21,7 @@ namespace iris {
         graphics::Device m_device{m_window};
         graphics::ForwardRenderer m_renderer{m_device, m_window};
 
-        app::Scene m_scene{m_renderer, m_window};
+        scene::Scene3DNav m_scene{m_renderer, m_window};
 
         void loadModels();
         void loadImages();

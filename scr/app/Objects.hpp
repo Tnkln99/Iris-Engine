@@ -19,7 +19,7 @@ namespace iris::app{
         explicit BoundingBox(graphics::Model& model){
             calculateLocalBounds(model);
         };
-        bool m_show = true;
+        bool m_show = false;
         std::shared_ptr<graphics::Model> m_pDebugModel{};
         glm::vec3 m_minLocal{};
         glm::vec3 m_maxLocal{};
@@ -66,6 +66,26 @@ namespace iris::app{
             // Update the world-space bounding box
             m_minWorld = minWorld;
             m_maxWorld = maxWorld;
+        }
+
+        bool intersects(glm::vec3 min, glm::vec3 max){
+            // Check for overlap along the X axis
+            if (m_maxWorld.x < min.x || m_minWorld.x > max.x) {
+                return false; // No overlap, the AABB is completely to the left or right of the cell
+            }
+
+            // Check for overlap along the Y axis
+            if (m_maxWorld.y < min.y || m_minWorld.y > max.y) {
+                return false; // No overlap, the AABB is completely above or below the cell
+            }
+
+            // Check for overlap along the Z axis
+            if (m_maxWorld.z < min.z || m_minWorld.z > max.z) {
+                return false; // No overlap, the AABB is completely in front of or behind the cell
+            }
+
+            // If we get here, there's overlap along all three axes, so the AABB intersects the cell
+            return true;
         }
 
         bool rayIntersectsBox(const glm::vec3& rayOrigin, const glm::vec3& rayDir) {
@@ -137,7 +157,6 @@ namespace iris::app{
             m_pDebugModel = std::make_shared<graphics::Model>(model.m_rDevice, builder);
         }
     };
-    class Scene;
     class RenderObject {
     public:
         struct GpuObjectData{
@@ -162,10 +181,10 @@ namespace iris::app{
         }
         glm::mat4 modelMatrix();
         glm::mat3 normalMatrix();
+        BoundingBox m_boundingBox{};
     private:
 
         std::shared_ptr<graphics::Model> m_pModel{};
-        BoundingBox m_boundingBox{};
     };
 
     class Camera{
@@ -188,13 +207,21 @@ namespace iris::app{
         glm::mat4 m_projectionMatrix = glm::mat4(1.0f);
 
         void update(float dt);
+        glm::vec3 m_target = glm::vec3(0.0f, 0.0f, 0.0f);
     private:
         graphics::Window& m_rWindow;
-        glm::vec3 m_target = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::vec3 m_up = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 m_front = glm::vec3(0.0f, 0.0f, -1.0f);
 
+        float m_yaw = -90.0f;
+        float m_pitch = 0.0f;
+        float m_lastX = 0;
+        float m_lastY = 0;
+        bool m_firstMouse = true;
+
         float m_speed = 100.0f;
+
+        void processMouseMovement(float xOffset, float yOffset);
     };
 
     class PointLight{
