@@ -46,6 +46,7 @@ namespace iris::scene{
         graphics::AssetsManager::storeMaterialInstance("MI_StarTextured", m_rRenderer.createMaterialInstance("M_Textured", "StarAmbient", "StarDiffuse", "StarSpecular"));
         graphics::AssetsManager::storeMaterialInstance("MI_Explored", m_rRenderer.createMaterialInstance("M_Textured", "T_Explored", "T_Explored", "T_Explored"));
         graphics::AssetsManager::storeMaterialInstance("MI_Red", m_rRenderer.createMaterialInstance("M_Textured", "T_Red", "T_Red", "T_Red"));
+        graphics::AssetsManager::storeMaterialInstance("MI_Green", m_rRenderer.createMaterialInstance("M_Textured", "T_Green", "T_Green", "T_Green"));
         graphics::AssetsManager::storeMaterialInstance("MI_Debug", m_rRenderer.createMaterialInstance("DebugBox"));
         m_camera.m_transform.m_translation = glm::vec3(-28, 2.2, 70);
 
@@ -58,10 +59,10 @@ namespace iris::scene{
         //sphere.getBoundingBox().update(0, sphere.modelMatrix());
         //m_renderObjects.push_back(sphere);
 
-        for (int i = -4; i < 4; i ++){
-            for(int j = -4; j < 4; j++){
+        for (int i = -5; i < 5; i ++){
+            for(int j = -5; j < 5; j++){
                 app::RenderObject cube{};
-                cube.m_transform.m_translation = glm::vec3(0, j * 2, i * 2);
+                cube.m_transform.m_translation = glm::vec3(2, j * 2 + 3, i * 2 + 2);
                 cube.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
                 cube.m_transform.m_scale = glm::vec3(2);
                 cube.setModel(graphics::AssetsManager::getModel("Cube"));
@@ -70,48 +71,36 @@ namespace iris::scene{
             }
         }
 
-        app::RenderObject cube{};
-        cube.m_transform.m_translation = glm::vec3(0);
-        cube.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
-        cube.m_transform.m_scale = glm::vec3(2);
-        cube.setModel(graphics::AssetsManager::getModel("Cube"));
-        cube.getBoundingBox().update(0, cube.modelMatrix());
-        m_renderObjects.push_back(cube);
+        for (int i = -5; i < 5; i ++){
+            for(int j = -4; j < 4; j++){
+                app::RenderObject cube{};
+                cube.m_transform.m_translation = glm::vec3(-4, j * 2 + 3, i * 2 + 10);
+                cube.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
+                cube.m_transform.m_scale = glm::vec3(2);
+                cube.setModel(graphics::AssetsManager::getModel("Cube"));
+                cube.getBoundingBox().update(0, cube.modelMatrix());
+                m_renderObjects.push_back(cube);
+            }
+        }
 
-        app::RenderObject cube2{};
-        cube2.m_transform.m_translation = glm::vec3(.0f, .0f, -2.0f);
-        cube2.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
-        cube2.m_transform.m_scale = glm::vec3(2);
-        cube2.setModel(graphics::AssetsManager::getModel("Cube"));
-        cube2.getBoundingBox().update(0, cube2.modelMatrix());
-        m_renderObjects.push_back(cube2);
-
-        app::RenderObject cube3{};
-        cube3.m_transform.m_translation = glm::vec3(.0f, .0f, 2.0f);
-        cube3.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
-        cube3.m_transform.m_scale = glm::vec3(2);
-        cube3.setModel(graphics::AssetsManager::getModel("Cube"));
-        cube3.getBoundingBox().update(0, cube3.modelMatrix());
-        m_renderObjects.push_back(cube3);
-
-        app::RenderObject cube4{};
-        cube4.m_transform.m_translation = glm::vec3(.0f, .0f, -4.0f);
-        cube4.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
-        cube4.m_transform.m_scale = glm::vec3(2);
-        cube4.setModel(graphics::AssetsManager::getModel("Cube"));
-        cube4.getBoundingBox().update(0, cube4.modelMatrix());
-        m_renderObjects.push_back(cube4);
+        app::RenderObject plane{};
+        plane.m_transform.m_translation = glm::vec3(-10,10,10);
+        plane.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Green");
+        plane.m_transform.m_scale = glm::vec3(5);
+        plane.setModel(graphics::AssetsManager::getModel("Plane"));
+        plane.getBoundingBox().update(0, plane.modelMatrix());
+        m_renderObjects.push_back(plane);
 
         glm::vec3 location(-16.0f, -16.0f, -16.0f);
         int gridSize = 1; // Size of each grid cell
-        int height = 70; // Height of the navigation area
-        int width = 70; // Width of the navigation area
-        int depth = 70; // Depth of the navigation area
+        int height = 40; // Height of the navigation area
+        int width = 40; // Width of the navigation area
+        int depth = 40; // Depth of the navigation area
         m_navArea.loadArea(location, gridSize, height, width, depth, m_renderObjects);
 
         app::RenderObject start{};
         start.m_transform.m_translation = glm::vec3(-15, -5, -5);
-        start.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Red");
+        start.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_StarTextured");
         start.m_transform.m_scale = glm::vec3(2);
         start.setModel(graphics::AssetsManager::getModel("Star"));
         start.getBoundingBox().update(0, start.modelMatrix());
@@ -119,14 +108,13 @@ namespace iris::scene{
 
         app::RenderObject goal{};
         goal.m_transform.m_translation = glm::vec3(10, 0, 5);
-        goal.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Red");
+        goal.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_StarTextured");
         goal.m_transform.m_scale = glm::vec3(2);
         goal.setModel(graphics::AssetsManager::getModel("Star"));
         goal.getBoundingBox().update(0, goal.modelMatrix());
         m_renderObjects.push_back(goal);
 
         m_navArea.aStarFindWay(start.m_transform.m_translation, goal.m_transform.m_translation, m_renderObjects);
-
     }
 
     void Scene3DNav::initLights() {
@@ -144,6 +132,13 @@ namespace iris::scene{
     }
 
     void Scene3DNav::drawUi() {
+        ImGui::Begin("Scene3DNav");
+        ImGui::Text("Camera Position: x: %f, y: %f, z: %f", m_camera.m_transform.m_translation.x, m_camera.m_transform.m_translation.y, m_camera.m_transform.m_translation.z);
+        ImGui::End();
+
+
+        ImGui::Begin("Settings");
+        ImGui::End();
 
     }
 }

@@ -141,8 +141,8 @@ namespace iris::app{
                                    m_target,
                                    m_up);
         m_projectionMatrix = glm::perspective(glm::radians(45.0f),
-                                              (float) m_rWindow.getWidth() / (float) m_rWindow.getHeight(), 0.1f,
-                                              100.0f);
+                                              (float) m_rWindow.getWidth() / (float) m_rWindow.getHeight(), 1.0f,
+                                              300.0f);
     }
 
     void Camera::processMouseMovement(float xOffset, float yOffset) {
