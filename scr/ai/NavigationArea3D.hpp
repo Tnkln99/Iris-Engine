@@ -16,6 +16,7 @@ namespace iris::ai{
         std::map<int , std::vector<int>> m_navGraph;
 
         void aStarFindWay(glm::vec3 start, glm::vec3 target, std::vector<app::RenderObject>& renderObjects);
+        void greedyBestFirstSearch(glm::vec3 start, glm::vec3 target, std::vector<app::RenderObject>& renderObjects);
     private:
         void generateGraph();
         glm::vec3 m_location;
@@ -53,7 +54,7 @@ namespace iris::ai{
             return worldPos;
         }
 
-        [[nodiscard]] float heuristic(int a, int b) const {
+        [[nodiscard]] double heuristic(int a, int b) const {
             return glm::distance(m_tiles.find(a)->second.m_location ,m_tiles.find(b)->second.m_location);
         }
 

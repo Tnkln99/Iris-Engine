@@ -25,12 +25,12 @@ namespace iris::ai{
 
                     for(auto & renderobject : renderObjects){
                         if(renderobject.getBoundingBox().intersects(cellMin, cellMax)){
-                            app::RenderObject tileToAvoid{};
-                            tileToAvoid.m_transform.m_translation = (cellMin + cellMax) / 2.0f; // Center of the cell
-                            tileToAvoid.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Debug");
-                            tileToAvoid.m_transform.m_scale = glm::vec3(gridSize);
-                            tileToAvoid.setModel(graphics::AssetsManager::getModel("Cube"));
-                            tilesToAdd.push_back(tileToAvoid);
+                            //app::RenderObject tileToAvoid{};
+                            //tileToAvoid.m_transform.m_translation = (cellMin + cellMax) / 2.0f; // Center of the cell
+                            //tileToAvoid.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Debug");
+                            //tileToAvoid.m_transform.m_scale = glm::vec3(gridSize);
+                            //tileToAvoid.setModel(graphics::AssetsManager::getModel("Cube"));
+                            //tilesToAdd.push_back(tileToAvoid);
                             if (std::find(obstacles.begin(), obstacles.end(), id) == obstacles.end()) {
                                 obstacles.push_back(id);
                             }
@@ -63,14 +63,29 @@ namespace iris::ai{
     }
 
     void NavigationArea3D::generateGraph() {
-        std::cout << "-------------------------------" << std::endl;
         std::vector<std::tuple<int, int, int>> directions = {
-                std::make_tuple(0, 1, 0),  // Move right in the XY plane
-                std::make_tuple(1, 0, 0),  // Move up in the XY plane
-                std::make_tuple(0, -1, 0), // Move left in the XY plane
-                std::make_tuple(-1, 0, 0), // Move down in the XY plane
-                std::make_tuple(0, 0, 1),  // Move up in the Z direction
-                std::make_tuple(0, 0, -1)  // Move down in the Z direction
+                // Cardinal directions
+                std::make_tuple(1, 0, 0), std::make_tuple(-1, 0, 0),  // Right, Left
+                std::make_tuple(0, 1, 0), std::make_tuple(0, -1, 0),  // Up, Down
+                std::make_tuple(0, 0, 1), std::make_tuple(0, 0, -1),  // Forward, Backward
+
+                // Edge diagonals on XY plane
+                std::make_tuple(1, 1, 0), std::make_tuple(1, -1, 0),
+                std::make_tuple(-1, 1, 0), std::make_tuple(-1, -1, 0),
+
+                // Edge diagonals on XZ plane
+                std::make_tuple(1, 0, 1), std::make_tuple(1, 0, -1),
+                std::make_tuple(-1, 0, 1), std::make_tuple(-1, 0, -1),
+
+                // Edge diagonals on YZ plane
+                std::make_tuple(0, 1, 1), std::make_tuple(0, 1, -1),
+                std::make_tuple(0, -1, 1), std::make_tuple(0, -1, -1),
+
+                // Corner diagonals
+                std::make_tuple(1, 1, 1), std::make_tuple(1, 1, -1),
+                std::make_tuple(1, -1, 1), std::make_tuple(1, -1, -1),
+                std::make_tuple(-1, 1, 1), std::make_tuple(-1, 1, -1),
+                std::make_tuple(-1, -1, 1), std::make_tuple(-1, -1, -1)
         };
 
         // Assuming gridSize defines the size of each cell and cells are equally spaced
@@ -104,11 +119,6 @@ namespace iris::ai{
                     if (findTile != m_tiles.end() && findTile->second.m_tileType != NavigationTile3D::TileType::OBSTACLE) {
                         neighbours.push_back(neighbourId);
                     }
-                    std::cout << "Tile ID: " << findTile->first;
-                    if (findTile->second.m_tileType == NavigationTile3D::TileType::OBSTACLE) {
-                        std::cout << " (Obstacle)";
-                    }
-                    std::cout << std::endl;
                 }
             }
 
@@ -122,10 +132,10 @@ namespace iris::ai{
 
         std::unordered_map<int, int> cameFrom{};
         std::unordered_map<int, double> costSoFar{};
-        std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, std::greater<>> frontier;
-        frontier.emplace(0, startIndex);
+        std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<>> frontier;
+        frontier.emplace(0.0, startIndex);
         cameFrom[startIndex] = startIndex;
-        costSoFar[startIndex] = 0;
+        costSoFar[startIndex] = 0.0;
 
         while (!frontier.empty()) {
             int current = frontier.top().second;
@@ -136,10 +146,41 @@ namespace iris::ai{
             }
 
             for (auto& next : m_navGraph[current]) {
-                double newCost = costSoFar[current] + 1;
+                double newCost = costSoFar[current] + 1; // Assuming uniform cost for simplicity
                 if (costSoFar.find(next) == costSoFar.end() || newCost < costSoFar[next]) {
                     costSoFar[next] = newCost;
-                    int priority = newCost + heuristic(next, goalIndex);
+                    double priority = newCost + heuristic(next, goalIndex); // Ensure heuristic returns double
+                    frontier.emplace(priority, next);
+                    cameFrom[next] = current;
+                }
+            }
+        }
+
+        drawPath(startIndex, goalIndex, cameFrom, renderObjects);
+    }
+
+    void NavigationArea3D::greedyBestFirstSearch(glm::vec3 start, glm::vec3 target,
+                                                 std::vector<app::RenderObject> &renderObjects) {
+        int startIndex = worldPosToGridIndex(start);
+        int goalIndex = worldPosToGridIndex(target);
+
+        std::unordered_map<int, int> cameFrom{};
+        std::unordered_map<int, double> costSoFar{};
+        std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<>> frontier;
+        frontier.emplace(0.0, startIndex);
+        cameFrom[startIndex] = startIndex;
+
+        while (!frontier.empty()) {
+            int current = frontier.top().second;
+            frontier.pop();
+
+            if (current == goalIndex) {
+                break;
+            }
+
+            for (auto& next : m_navGraph[current]) {
+                if (cameFrom.find(next) == cameFrom.end()) {
+                    double priority =  heuristic(next, goalIndex); // Ensure heuristic returns double
                     frontier.emplace(priority, next);
                     cameFrom[next] = current;
                 }
@@ -165,7 +206,6 @@ namespace iris::ai{
             path.push_back(current);
         }
 
-        std::cout << " --------------------------------- " << std::endl;
 
         // The path vector now contains the indices from target to start, in reverse order
         // To print them in order from start to target, reverse the vector or iterate in reverse
@@ -176,7 +216,6 @@ namespace iris::ai{
             if(*it == goal){
                 continue;
             }
-            std::cout << m_tiles.find(*it)->first << std::endl;
             app::RenderObject cube{};
             cube.m_transform.m_translation = m_tiles.find(*it)->second.m_location;
             cube.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_StarTextured");

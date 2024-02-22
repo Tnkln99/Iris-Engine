@@ -102,15 +102,15 @@ namespace iris::scene{
         cube4.getBoundingBox().update(0, cube4.modelMatrix());
         m_renderObjects.push_back(cube4);
 
-        glm::vec3 location(-15.0f, -15.0f, -15.0f);
-        int gridSize = 2; // Size of each grid cell
-        int height = 26; // Height of the navigation area
-        int width = 26; // Width of the navigation area
-        int depth = 26; // Depth of the navigation area
+        glm::vec3 location(-16.0f, -16.0f, -16.0f);
+        int gridSize = 1; // Size of each grid cell
+        int height = 70; // Height of the navigation area
+        int width = 70; // Width of the navigation area
+        int depth = 70; // Depth of the navigation area
         m_navArea.loadArea(location, gridSize, height, width, depth, m_renderObjects);
 
         app::RenderObject start{};
-        start.m_transform.m_translation = glm::vec3(-16, -5, -5);
+        start.m_transform.m_translation = glm::vec3(-15, -5, -5);
         start.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Red");
         start.m_transform.m_scale = glm::vec3(2);
         start.setModel(graphics::AssetsManager::getModel("Star"));
@@ -118,7 +118,7 @@ namespace iris::scene{
         m_renderObjects.push_back(start);
 
         app::RenderObject goal{};
-        goal.m_transform.m_translation = glm::vec3(5, 5, 5);
+        goal.m_transform.m_translation = glm::vec3(10, 0, 5);
         goal.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Red");
         goal.m_transform.m_scale = glm::vec3(2);
         goal.setModel(graphics::AssetsManager::getModel("Star"));
