@@ -60,7 +60,7 @@ namespace iris::scene{
         //m_renderObjects.push_back(sphere);
 
         for (int i = -5; i < 5; i ++){
-            for(int j = -5; j < 5; j++){
+            for(int j = -10; j < 10; j++){
                 app::RenderObject cube{};
                 cube.m_transform.m_translation = glm::vec3(2, j * 2 + 3, i * 2 + 2);
                 cube.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
@@ -72,7 +72,7 @@ namespace iris::scene{
         }
 
         for (int i = -5; i < 5; i ++){
-            for(int j = -4; j < 4; j++){
+            for(int j = -10; j < 10; j++){
                 app::RenderObject cube{};
                 cube.m_transform.m_translation = glm::vec3(-4, j * 2 + 3, i * 2 + 10);
                 cube.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Explored");
@@ -138,6 +138,7 @@ namespace iris::scene{
 
 
         ImGui::Begin("Settings");
+
         ImGui::End();
 
     }
