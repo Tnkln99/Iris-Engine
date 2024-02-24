@@ -1,7 +1,9 @@
 #include "Scene3DNav.hpp"
 #include "../graphics/AssetsManager.hpp"
-
 #include "imgui.h"
+
+#include <vector>
+#include <algorithm>
 
 
 namespace iris::scene{
@@ -92,16 +94,17 @@ namespace iris::scene{
         m_renderObjects.push_back(plane);
 
         glm::vec3 location(-16.0f, -16.0f, -16.0f);
-        int gridSize = 1; // Size of each grid cell
-        int height = 40; // Height of the navigation area
-        int width = 40; // Width of the navigation area
-        int depth = 40; // Depth of the navigation area
+        int gridSize = 4; // Size of each grid cell
+        int height = 52; // Height of the navigation area
+        int width = 52; // Width of the navigation area
+        int depth = 52; // Depth of the navigation area
         m_navArea.loadArea(location, gridSize, height, width, depth, m_renderObjects);
 
         app::RenderObject start{};
         start.m_transform.m_translation = glm::vec3(-15, -5, -5);
         start.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_StarTextured");
         start.m_transform.m_scale = glm::vec3(2);
+        start.m_name = "start";
         start.setModel(graphics::AssetsManager::getModel("Star"));
         start.getBoundingBox().update(0, start.modelMatrix());
         m_renderObjects.push_back(start);
@@ -110,6 +113,7 @@ namespace iris::scene{
         goal.m_transform.m_translation = glm::vec3(10, 0, 5);
         goal.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_StarTextured");
         goal.m_transform.m_scale = glm::vec3(2);
+        goal.m_name = "goal";
         goal.setModel(graphics::AssetsManager::getModel("Star"));
         goal.getBoundingBox().update(0, goal.modelMatrix());
         m_renderObjects.push_back(goal);
@@ -138,6 +142,53 @@ namespace iris::scene{
 
 
         ImGui::Begin("Settings");
+
+        static bool showGrid = false;
+        ImGui::Checkbox("ShowGrid",&showGrid);
+
+        for (auto& rb : m_renderObjects) {
+            if(rb.m_name == "grid"){
+                rb.m_bRender = showGrid;
+            }
+            // Skip "path" and "default" objects
+            if (rb.m_name == "path" || rb.m_name == "default" || rb.m_name == "grid") continue;
+
+            // Use a TreeNode to represent each RenderObject
+            if (ImGui::TreeNode(rb.m_name.c_str())) {
+                // Now, inside the tree, we can allow editing of positions
+                ImGui::InputFloat("X Position", &(rb.m_transform.m_translation.x));
+                ImGui::InputFloat("Y Position", &(rb.m_transform.m_translation.y));
+                ImGui::InputFloat("Z Position", &(rb.m_transform.m_translation.z));
+
+
+                ImGui::TreePop();
+            }
+        }
+
+        if(ImGui::Button("Find Path")){
+            // Use erase-remove idiom to remove all objects with m_name == "path"
+            m_renderObjects.erase(std::remove_if(m_renderObjects.begin(), m_renderObjects.end(),
+                                                 [](const app::RenderObject& obj) { return obj.m_name == "path"; }),
+                                  m_renderObjects.end());
+
+            glm::vec3 startPos;
+            glm::vec3 goalPos;
+
+            for(auto & ro : m_renderObjects){
+                if(ro.m_name == "goal"){
+                    goalPos = ro.m_transform.m_translation;
+                }
+
+                if(ro.m_name == "start"){
+                    startPos = ro.m_transform.m_translation;
+                }
+            }
+
+
+            m_navArea.aStarFindWay(startPos, goalPos, m_renderObjects);
+        }
+
+
 
         ImGui::End();
 

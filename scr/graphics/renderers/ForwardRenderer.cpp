@@ -213,6 +213,9 @@ namespace iris::graphics{
 
 
         for(auto & renderObject : renderObjects){
+            if(!renderObject.m_bRender){
+                continue;
+            }
             auto materialInst = renderObject.m_pMaterialInstance;
             auto material = renderObject.m_pMaterialInstance->m_pMaterial;
 

@@ -182,6 +182,9 @@ namespace iris::app{
         glm::mat4 modelMatrix();
         glm::mat3 normalMatrix();
         BoundingBox m_boundingBox{};
+
+        std::string m_name = "default";
+        bool m_bRender = true;
     private:
 
         std::shared_ptr<graphics::Model> m_pModel{};

@@ -40,12 +40,14 @@ namespace iris::ai{
                         m_tiles.insert(std::pair<int, NavigationTile3D>(id, tile));
                     }
 
-                    //app::RenderObject tileToAvoid{};
-                    //tileToAvoid.m_transform.m_translation = (cellMin + cellMax) / 2.0f; // Center of the cell
-                    //tileToAvoid.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Debug");
-                    //tileToAvoid.m_transform.m_scale = glm::vec3(gridSize);
-                    //tileToAvoid.setModel(graphics::AssetsManager::getModel("Cube"));
-                    //tilesToAdd.push_back(tileToAvoid);
+                    app::RenderObject tileToAvoid{};
+                    tileToAvoid.m_transform.m_translation = (cellMin + cellMax) / 2.0f; // Center of the cell
+                    tileToAvoid.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_Debug");
+                    tileToAvoid.m_transform.m_scale = glm::vec3(gridSize);
+                    tileToAvoid.m_name = "grid";
+                    tileToAvoid.m_bRender = false;
+                    tileToAvoid.setModel(graphics::AssetsManager::getModel("Cube"));
+                    tilesToAdd.push_back(tileToAvoid);
                     id++;
                 }
             }
@@ -220,6 +222,7 @@ namespace iris::ai{
             cube.m_transform.m_translation = m_tiles.find(*it)->second.m_location;
             cube.m_pMaterialInstance = graphics::AssetsManager::getMaterialInstance("MI_StarTextured");
             cube.m_transform.m_scale = glm::vec3(0.5);
+            cube.m_name = "path";
             cube.setModel(graphics::AssetsManager::getModel("Star"));
             cube.getBoundingBox().update(0, cube.modelMatrix());
             renderObjects.push_back(cube);
