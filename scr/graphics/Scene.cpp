@@ -31,27 +31,27 @@ namespace iris::graphics{
     }
 
     void Scene::initObjects() {
-        //RenderObject plane{};
-        //plane.m_pModel = AssetsManager::getModel("Plane");
-        //plane.m_pMaterial = AssetsManager::getMaterial("DefaultMeshNonTextured");
-        //plane.m_transform.m_translation = {0.0f, 0.0f, 0.0f};
-        //plane.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        //m_renderObjects.push_back(plane);
+        RenderObject plane{};
+        plane.m_pModel = AssetsManager::getModel("Plane");
+        plane.m_pMaterial = AssetsManager::getMaterial("DefaultMeshNonTextured");
+        plane.m_transform.m_translation = {0.0f, 0.0f, 0.0f};
+        plane.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        m_renderObjects.push_back(plane);
 
-        //RenderObject star{};
-        //star.m_pModel = AssetsManager::getModel("Star");
-        //star.m_pMaterial = AssetsManager::getMaterial("DefaultMeshNonTextured");
-        //star.m_transform.m_translation = {-0.3f, 0.2f, 0.0f};
-        //star.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        //m_renderObjects.push_back(star);
+        RenderObject star{};
+        star.m_pModel = AssetsManager::getModel("Star");
+        star.m_pMaterial = AssetsManager::getMaterial("DefaultMeshNonTextured");
+        star.m_transform.m_translation = {-0.3f, 0.2f, 0.0f};
+        star.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        m_renderObjects.push_back(star);
 
-        //RenderObject texturedStar{};
-        //texturedStar.m_pModel = AssetsManager::getModel("Star");
-        //texturedStar.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
-        //texturedStar.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
-        //texturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
-        //texturedStar.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
-        //m_renderObjects.push_back(texturedStar);
+        RenderObject texturedStar{};
+        texturedStar.m_pModel = AssetsManager::getModel("Star");
+        texturedStar.m_pMaterial = AssetsManager::getMaterial("DefaultMeshTextured");
+        texturedStar.m_transform.m_translation = {0.3f, 0.2f, 0.0f};
+        texturedStar.m_transform.m_scale = {0.5f, 0.5f, 0.5f};
+        texturedStar.m_transform.m_rotation = {180.0f, 0.0f, 0.0f};
+        m_renderObjects.push_back(texturedStar);
     }
 
     void Scene::initLights() {
