@@ -34,6 +34,7 @@ namespace iris::graphics{
                                                                        VkFramebuffer framebuffer) ;
         [[nodiscard]] static VkPipelineLayoutCreateInfo createPipelineLayoutInfo();
         [[nodiscard]] static VkWriteDescriptorSet writeDescriptorImage(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorImageInfo* imageInfo, uint32_t binding);
+        [[nodiscard]] static VkAttachmentDescription createAttachmentDescription(VkFormat format, VkImageLayout finalLayout);
     };
 }
 

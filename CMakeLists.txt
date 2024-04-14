@@ -32,7 +32,7 @@ if(GIT_FOUND)
             https://github.com/tinyobjloader/tinyobjloader.git
             https://github.com/nothings/stb.git)
     set(RELEASES main;
-            3.2.1;
+            master;
             main;
             master;
             master;

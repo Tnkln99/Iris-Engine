@@ -214,4 +214,39 @@ namespace iris::graphics{
 
         return write;
     }
+
+    VkAttachmentDescription Initializers::createAttachmentDescription(VkFormat format, VkImageLayout finalLayout) {
+        VkAttachmentDescription attachmentDescription = {};
+
+        // Set the format of the attachment
+        attachmentDescription.format = format;
+
+        // Set the number of samples for this attachment
+        attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+
+        // Specify what to do with the attachment at the start of the subpass
+        // In this case, we clear it at the start of the render pass
+        attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+
+        // Specify what to do with the attachment at the end of the subpass
+        // Here, we'll store the attachment so that it can be used later
+        attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+        // Stencil operations, if this attachment will not be used for stencil data
+        // then we don't care about these settings
+        attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+        // The initial layout specifies the layout the attachment images will be in
+        // when the render pass begins. VK_IMAGE_LAYOUT_UNDEFINED means that the image
+        // content doesn't need to be preserved; however, the exact layout at this point
+        // depends on previous usage.
+        attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+        // The final layout specifies the layout the attachment images will transition
+        // to when the render pass ends. This is set according to the parameter.
+        attachmentDescription.finalLayout = finalLayout;
+
+        return attachmentDescription;
+    }
 }

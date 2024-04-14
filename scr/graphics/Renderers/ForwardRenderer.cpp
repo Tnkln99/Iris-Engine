@@ -75,7 +75,6 @@ namespace iris::graphics{
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
-        //hook the depth attachment into the subpass
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
         std::vector<VkSubpassDescription> subpasses = { subpass };

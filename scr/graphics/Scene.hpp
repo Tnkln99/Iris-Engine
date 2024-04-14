@@ -10,14 +10,14 @@
 namespace iris::graphics{
     class Scene {
     public:
-        explicit Scene(ForwardRenderer& renderer);
+        explicit Scene(Renderer& renderer);
         ~Scene();
 
         void loadScene();
         void update();
         void draw();
     private:
-        ForwardRenderer& m_rRenderer;
+        Renderer& m_rRenderer;
 
         GpuSceneData m_sceneData{};
         Camera m_camera{};

@@ -18,6 +18,7 @@ namespace iris::graphics{
         virtual VkCommandBuffer beginFrame() = 0;
         virtual void loadRenderer() = 0;
         virtual void endFrame(VkCommandBuffer cmd) = 0;
+        // cleans resources after rendering is done
         virtual void postRender() = 0;
         virtual void renderScene(std::vector<RenderObject> & renderObjects, GpuSceneData sceneData, Camera & camera) = 0;
 

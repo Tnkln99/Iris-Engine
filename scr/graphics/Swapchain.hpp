@@ -49,9 +49,6 @@ namespace iris::graphics{
         std::vector<VkImageView> m_swapchainImageViews;
         VkFormat m_swapchainImageFormat;
 
-        // color attachments for deferred rendering
-        // TODO
-
         VkExtent2D m_windowExtent{};
         VkExtent2D m_swapChainExtent{};
 

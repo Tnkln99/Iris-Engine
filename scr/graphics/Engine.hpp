@@ -3,6 +3,7 @@
 
 #include "Device.hpp"
 #include "Renderers/ForwardRenderer.hpp"
+#include "Renderers/DeferredRenderer.hpp"
 #include "Scene.hpp"
 
 namespace iris::graphics {
@@ -18,7 +19,7 @@ namespace iris::graphics {
     private:
         Window m_window{800, 600, "Iris Engine"};
         Device m_device{m_window};
-        ForwardRenderer m_renderer{m_device, m_window};
+        DeferredRenderer m_renderer{m_device, m_window};
 
         Scene m_scene{m_renderer};
 
