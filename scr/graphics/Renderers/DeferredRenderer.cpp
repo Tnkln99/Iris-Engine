@@ -262,9 +262,9 @@ namespace iris::graphics{
     }
 
     void DeferredRenderer::initGPassTextures() {
-        VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_UNORM;     // Albedo might be stored with standard color format
+        VkFormat albedoFormat = VK_FORMAT_R16G16B16A16_SFLOAT;     // Albedo might be stored with standard color format
         VkFormat normalFormat = VK_FORMAT_R16G16B16A16_SFLOAT; // Normals need high precision
-        VkFormat specularFormat = VK_FORMAT_R8G8B8A8_UNORM;    // Specular or roughness/metallic might also use standard color format
+        VkFormat specularFormat = VK_FORMAT_R16G16B16A16_SFLOAT;    // Specular or roughness/metallic might also use standard color format
         VkFormat positionFormat = VK_FORMAT_R16G16B16A16_SFLOAT; // High precision for position data
         VkFormat depthFormat = m_pSwapchain->findDepthFormat();
 
@@ -318,7 +318,7 @@ namespace iris::graphics{
         std::vector<VkAttachmentDescription> attachments = {
                 Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Albedo
                 Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Normal
-                Initializers::createAttachmentDescription(VK_FORMAT_R8G8B8A8_UNORM,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),     // Specular
+                Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),     // Specular
                 Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Position
                 Initializers::createAttachmentDescription(m_pSwapchain->findDepthFormat(),  VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),// Depth
                 Initializers::createAttachmentDescription(m_pSwapchain->getSwapchainImageFormat(),  VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) // Final output
