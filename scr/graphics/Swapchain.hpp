@@ -29,6 +29,8 @@ namespace iris::graphics{
         }
 
         void createFramebuffers(VkRenderPass renderPass);
+        // for deferred rendering
+        void createFramebufferWithAttachments(VkRenderPass renderPass, int attachmentsCount);
         VkFramebuffer getFrameBuffer(int index) { return m_swapchainFramebuffers[index]; }
     private:
         Device& m_rDevice;

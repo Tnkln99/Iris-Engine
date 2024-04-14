@@ -153,7 +153,7 @@ namespace iris::graphics{
                              VkImageAspectFlags aspectFlags, VkImageView& imageView);
 
         void transitionGBufferImageLayouts();
-        // init textures that framebuffer will use
+        // init textures that framebuffer will attach
         void initGPassTextures();
         Texture m_albedoTexture;
         Texture m_specularTexture;
@@ -161,9 +161,10 @@ namespace iris::graphics{
         Texture m_positionTexture;
         Texture m_depthTexture;
         // creating framebuffers to write the position normal and albedo
-        // it will use the renderpass compatible with these framebuffers to init them
+        // it will use the renderpass so renderpass should initialise before
         void initGPassFramebuffer();
         VkFramebuffer m_gBufferFramebuffer;
+
 
         std::unique_ptr<DescriptorPool> m_pGlobalPool{};
 

@@ -274,6 +274,30 @@ namespace iris::graphics{
         }
     }
 
+    void Swapchain::createFramebufferWithAttachments(VkRenderPass renderPass, int attachmentsCount) {
+        m_swapchainFramebuffers.resize(getImagesCount());
+
+
+        for (size_t i = 0; i < getImagesCount(); i++) {
+            std::vector<VkImageView> attachments;
+            for(int i = 0; i < attachmentsCount; i++){
+                if(i != attachmentsCount - 1){
+                    attachments.push_back(VK_NULL_HANDLE);
+                }
+                else{
+                    attachments.push_back(m_swapchainImageViews[i]);
+                }
+            }
+            VkFramebufferCreateInfo framebufferInfo = Initializers::createFramebufferInfo(renderPass,
+                                                                                          m_windowExtent,
+                                                                                          attachments);
+            Debugger::vkCheck(vkCreateFramebuffer(m_rDevice.getDevice(), &framebufferInfo, nullptr, &m_swapchainFramebuffers[i]),
+                              "Failed to create framebuffer!");
+        }
+
+
+    }
+
     void Swapchain::submitCommandBuffers(const VkCommandBuffer *buffers, int currentFrameIndex) {
         if (m_imagesInFlight[currentFrameIndex] != VK_NULL_HANDLE) {
             vkWaitForFences(m_rDevice.getDevice(), 1, &m_imagesInFlight[currentFrameIndex], VK_TRUE, UINT64_MAX);

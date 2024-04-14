@@ -3,8 +3,6 @@
 #include "../Debugger.hpp"
 #include "../AssetsManager.hpp"
 #include "../../utilities/Timer.hpp"
-#include "../../utilities/Timer.hpp"
-#include "../../utilities/Timer.hpp"
 
 namespace iris::graphics{
 
@@ -28,7 +26,6 @@ namespace iris::graphics{
         initRenderPass();
         initGPassTextures();
         initGPassFramebuffer();
-        m_pSwapchain->createFramebuffers(m_renderPass);
     }
 
     void DeferredRenderer::loadRenderer() {
@@ -193,7 +190,8 @@ namespace iris::graphics{
         VmaAllocationCreateInfo allocInfo = {};
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-        if (vmaCreateImage(allocator, &imageInfo, &allocInfo, &allocatedImage.m_image, &allocatedImage.m_allocation, nullptr) != VK_SUCCESS) {
+        if (vmaCreateImage(allocator, &imageInfo, &allocInfo, &allocatedImage.m_image,
+                           &allocatedImage.m_allocation, nullptr) != VK_SUCCESS) {
             throw std::runtime_error("failed to create image!");
         }
     }
@@ -268,44 +266,129 @@ namespace iris::graphics{
         VkFormat normalFormat = VK_FORMAT_R16G16B16A16_SFLOAT; // Normals need high precision
         VkFormat specularFormat = VK_FORMAT_R8G8B8A8_UNORM;    // Specular or roughness/metallic might also use standard color format
         VkFormat positionFormat = VK_FORMAT_R16G16B16A16_SFLOAT; // High precision for position data
+        VkFormat depthFormat = m_pSwapchain->findDepthFormat();
 
 
         createImage(m_rDevice.getDevice(), m_rDevice.getAllocator(), m_pSwapchain->getExtent().width, m_pSwapchain->getExtent().height, albedoFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_albedoTexture.m_allocatedImage);
         createImage(m_rDevice.getDevice(), m_rDevice.getAllocator(), m_pSwapchain->getExtent().width, m_pSwapchain->getExtent().height, normalFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_normalTexture.m_allocatedImage);
         createImage(m_rDevice.getDevice(), m_rDevice.getAllocator(), m_pSwapchain->getExtent().width, m_pSwapchain->getExtent().height, specularFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_specularTexture.m_allocatedImage);
         createImage(m_rDevice.getDevice(), m_rDevice.getAllocator(), m_pSwapchain->getExtent().width, m_pSwapchain->getExtent().height, positionFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_positionTexture.m_allocatedImage);
+        createImage(m_rDevice.getDevice(), m_rDevice.getAllocator(), m_pSwapchain->getExtent().width, m_pSwapchain->getExtent().height, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_depthTexture.m_allocatedImage);
 
         createImageView(m_rDevice.getDevice(), m_albedoTexture.m_allocatedImage.m_image, albedoFormat, VK_IMAGE_ASPECT_COLOR_BIT, m_albedoTexture.m_imageView);
         createImageView(m_rDevice.getDevice(), m_normalTexture.m_allocatedImage.m_image, normalFormat, VK_IMAGE_ASPECT_COLOR_BIT, m_normalTexture.m_imageView);
         createImageView(m_rDevice.getDevice(), m_specularTexture.m_allocatedImage.m_image, specularFormat, VK_IMAGE_ASPECT_COLOR_BIT, m_specularTexture.m_imageView);
         createImageView(m_rDevice.getDevice(), m_positionTexture.m_allocatedImage.m_image, positionFormat, VK_IMAGE_ASPECT_COLOR_BIT, m_positionTexture.m_imageView);
+        createImageView(m_rDevice.getDevice(), m_depthTexture.m_allocatedImage.m_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, m_depthTexture.m_imageView);
 
         transitionGBufferImageLayouts();
     }
 
     void DeferredRenderer::initGPassFramebuffer() {
         // Assuming the textures are already created and have valid image views.
-        VkImageView attachments[5];
+        std::vector<VkImageView> attachments;
+        attachments.resize(6);
         attachments[0] = m_albedoTexture.m_imageView;  // Albedo attachment
         attachments[1] = m_specularTexture.m_imageView;  // Normal attachment
         attachments[2] = m_normalTexture.m_imageView; // Specular attachment
-        attachments[3] = m_normalTexture.m_imageView; // Specular attachment
+        attachments[3] = m_positionTexture.m_imageView; // Position attachment
         attachments[4] = m_depthTexture.m_imageView;   // Depth attachment
+        attachments[5] = VK_NULL_HANDLE;
 
         // Create the framebuffer for the G-buffer pass
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = m_renderPass;
-        framebufferInfo.attachmentCount = sizeof(attachments) / sizeof(attachments[0]);
-        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.attachmentCount = attachments.size();
+        framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = m_pSwapchain->getExtent().width;
         framebufferInfo.height = m_pSwapchain->getExtent().height;
         framebufferInfo.layers = 1;
 
+
         if (vkCreateFramebuffer(m_rDevice.getDevice(), &framebufferInfo, nullptr, &m_gBufferFramebuffer) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create G-buffer framebuffer");
         }
+
+        m_pSwapchain->createFramebufferWithAttachments(m_renderPass, attachments.size());
     }
+
+    void DeferredRenderer::initRenderPass() {
+        // Create attachment descriptions for G-buffer components and final output
+        std::vector<VkAttachmentDescription> attachments = {
+                Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Albedo
+                Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Normal
+                Initializers::createAttachmentDescription(VK_FORMAT_R8G8B8A8_UNORM,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),     // Specular
+                Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Position
+                Initializers::createAttachmentDescription(m_pSwapchain->findDepthFormat(),  VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL),// Depth
+                Initializers::createAttachmentDescription(m_pSwapchain->getSwapchainImageFormat(),  VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) // Final output
+        };
+
+        // Reference to G-buffer attachments in subpass 1
+        VkAttachmentReference albedoRef = {0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+        VkAttachmentReference normalRef = {1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+        VkAttachmentReference specularRef = {2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+        VkAttachmentReference positionRef = {3, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+        VkAttachmentReference depthRef = {4, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+
+        std::vector<VkAttachmentReference> gBufferAttachmentRefs = { albedoRef, normalRef, specularRef, positionRef };
+
+        // Setup for subpass 1 (G-buffer generation)
+        VkSubpassDescription gBufferSubpass = {};
+        gBufferSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        gBufferSubpass.colorAttachmentCount = static_cast<uint32_t>(gBufferAttachmentRefs.size());
+        gBufferSubpass.pColorAttachments = gBufferAttachmentRefs.data();
+        gBufferSubpass.pDepthStencilAttachment = &depthRef;
+
+        // Reference to final color attachment in subpass 2
+        VkAttachmentReference finalColorRef = {5, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+
+        // Setup for subpass 2 (lighting calculation using G-buffer)
+        VkSubpassDescription lightingSubpass = {};
+        lightingSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        lightingSubpass.colorAttachmentCount = 1;
+        lightingSubpass.pColorAttachments = &finalColorRef;
+
+        // Setup subpass dependencies for correct ordering and layout transitions
+        std::vector<VkSubpassDependency> dependencies = {
+                {
+                        .srcSubpass = VK_SUBPASS_EXTERNAL,
+                        .dstSubpass = 0,
+                        .srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                        .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        .srcAccessMask = 0,
+                        .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                        .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+                },
+                {
+                        .srcSubpass = 0,
+                        .dstSubpass = 1,
+                        .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                        .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
+                        .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+                },
+                {
+                        .srcSubpass = 1,
+                        .dstSubpass = VK_SUBPASS_EXTERNAL,
+                        .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        .dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+                        .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+                }
+        };
+
+        std::vector<VkSubpassDescription> subpasses { gBufferSubpass, lightingSubpass };
+
+        // Create the render pass with both subpasses
+        VkRenderPassCreateInfo renderPassInfo = Initializers::createRenderPassInfo(attachments, subpasses, dependencies);
+        if (vkCreateRenderPass(m_rDevice.getDevice(), &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create the render pass.");
+        }
+    }
+
 
     void DeferredRenderer::initGBufferDescriptorSets() {
         // initialize the global descriptor sets
@@ -387,82 +470,6 @@ namespace iris::graphics{
                         AssetsManager::getTexture("StarDiffuse"),
                         AssetsManager::getTexture("StarSpecular"),
                         *m_pGlobalPool, *m_pTexturedSetLayout);
-    }
-
-    void DeferredRenderer::initRenderPass() {
-        // Create attachment descriptions for G-buffer components and final output
-        std::vector<VkAttachmentDescription> attachments = {
-                Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Albedo
-                Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Normal
-                Initializers::createAttachmentDescription(VK_FORMAT_R8G8B8A8_UNORM,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),     // Specular
-                Initializers::createAttachmentDescription(VK_FORMAT_R16G16B16A16_SFLOAT,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), // Position
-                Initializers::createAttachmentDescription(m_pSwapchain->getSwapchainImageFormat(),  VK_IMAGE_LAYOUT_PRESENT_SRC_KHR),  // Final output
-                Initializers::createAttachmentDescription(m_pSwapchain->findDepthFormat(),  VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) // Depth
-        };
-
-        // Reference to G-buffer attachments in subpass 1
-        VkAttachmentReference albedoRef = {0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-        VkAttachmentReference normalRef = {1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-        VkAttachmentReference specularRef = {2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-        VkAttachmentReference positionRef = {3, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-        VkAttachmentReference depthRef = {5, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
-
-        std::vector<VkAttachmentReference> gBufferAttachmentRefs = { albedoRef, normalRef, specularRef, positionRef };
-
-        // Setup for subpass 1 (G-buffer generation)
-        VkSubpassDescription gBufferSubpass = {};
-        gBufferSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        gBufferSubpass.colorAttachmentCount = static_cast<uint32_t>(gBufferAttachmentRefs.size());
-        gBufferSubpass.pColorAttachments = gBufferAttachmentRefs.data();
-        gBufferSubpass.pDepthStencilAttachment = &depthRef;
-
-        // Reference to final color attachment in subpass 2
-        VkAttachmentReference finalColorRef = {4, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-
-        // Setup for subpass 2 (lighting calculation using G-buffer)
-        VkSubpassDescription lightingSubpass = {};
-        lightingSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        lightingSubpass.colorAttachmentCount = 1;
-        lightingSubpass.pColorAttachments = &finalColorRef;
-
-        // Setup subpass dependencies for correct ordering and layout transitions
-        std::vector<VkSubpassDependency> dependencies = {
-                {
-                        .srcSubpass = VK_SUBPASS_EXTERNAL,
-                        .dstSubpass = 0,
-                        .srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                        .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                        .srcAccessMask = 0,
-                        .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                        .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-                },
-                {
-                        .srcSubpass = 0,
-                        .dstSubpass = 1,
-                        .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                        .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                        .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
-                        .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-                },
-                {
-                        .srcSubpass = 1,
-                        .dstSubpass = VK_SUBPASS_EXTERNAL,
-                        .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                        .dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-                        .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-                }
-        };
-
-        std::vector<VkSubpassDescription> subpasses { gBufferSubpass, lightingSubpass };
-
-        // Create the render pass with both subpasses
-        VkRenderPassCreateInfo renderPassInfo = Initializers::createRenderPassInfo(attachments, subpasses, dependencies);
-        if (vkCreateRenderPass(m_rDevice.getDevice(), &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to create the render pass.");
-        }
     }
 
     void DeferredRenderer::initLightPassPipeline() {
